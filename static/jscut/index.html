@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>jscut.org</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+    <link href="lib/bootstrap-3.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="lib/jquery-2.1.1.min.js"></script>
+    <script src="lib/bootstrap-3.1.1/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+<div class="container">
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <div class="jumbotron">
+                <h1>
+                    A CAM in your browser!
+                </h1>
+                <p>
+                    Convert your SVG files to CNC cutting paths with this tool.
+                </p>
+                <p>
+                    <a class="btn btn-primary btn-large" href="jscut.html">Launch!</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="row clearfix">
+        <div class="col-md-4 column">
+            <h2>
+                Features
+            </h2>
+            <ul>
+                <ul>
+                    <li><a href="RenderPath.html">3D Gcode simulation view</a></li>
+                    <li>Pocket and Outline operations</li>
+                    <li>V cutter support</li>
+                    <li>mm or inch GCode output</li>
+                    <li>Supports Firefox, Chrome, and <a href="https://github.com/tbfleming/jscut/issues/24"><del>Safari</del></a></li>
+                    <li>Works with Google Drive</li>
+                </ul>
+            </ul>
+            <h2>
+                API
+            </h2>
+            <ul>
+                <ul>
+                    <li>Embed jscut in your webapps using api.jscut.org</li>
+                    <li>Examples<ul>
+                        <li><a href="http://jsfiddle.net/UbHPd/">Gcode Simulator</a></li>
+                        <li><a href="http://jsfiddle.net/tbfleming/cLwgd/">Geometry Operations</a></li>
+                        <li><a href="http://jsfiddle.net/tbfleming/p4nwp/">CAM Wizard</a></li>
+                        </ul></li>
+                </ul>
+            </ul>
+        </div>
+        <div class="col-md-4 column">
+            <h2>
+                Open Source
+            </h2>
+            <p>
+                Fork me on <a href="https://github.com/tbfleming/jscut">GitHub</a>
+            </p>
+            <h2>
+                Discussion Group
+            </h2>
+            <p>
+                Questions? Willing to help out? Join us at our <a href="https://groups.google.com/forum/#!forum/jscut">Google Group</a>
+            </p>
+            <h2>
+                Standalone Version
+            </h2>
+            <p>
+                <a href="http://api.jscut.org/jscut_standalone.tar.gz">Download</a>
+            </p>
+            <p>
+                This version supports disconnected use. Git clones require network access to function correctly unless you run 'make'.
+            </p>
+        </div>
+        <div class="col-md-4 column">
+            <h2>
+                Latest Changes
+            </h2>
+            <ul>
+                <li>V Cutter support with 3D preview: select "V Pocket" operation</li>
+                <li>Create your own default settings for jscut to use; see "Save Settings" for details.</li>
+                <li>"Open Settings" -> "In Browser" now has a Delete button.</li>
+                <li>Tabs. These work with all operations, including Pocket.</li>
+                <li>Added standalone version</li>
+                <li>
+                    Post your CAM settings publicly in GitHub Gist<ul>
+                        <li>Use the Gist button in the Save Settings dialog</li>
+                        <li><a href="http://jscut.org/jscut.html?gist=6cd7ccd0f24a6507cf42">Example</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>
