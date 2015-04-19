@@ -105,12 +105,12 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">Raspberry Pi CNC</a>
+            <a class="navbar-brand" href="#">GRBLWeb - a web based CNC controller for GRBL</a>
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
 
-                <!--li><button type="button" class="btn btn-default" style="margin: 10px;" onClick="window.open('/jscut/jscut.html','_blank'); return false;">Jscut CAM</button></li-->
+                <li><button type="button" class="btn btn-default" style="margin: 10px;" onClick="window.open('/jscut/jscut.html','_blank'); return false;">Jscut CAM</button></li>
                 <li><button type="button" class="btn btn-default" style="margin: 10px;" id="sendReset">RESET (ctrl-x)</button></li>
                 <li><button type="button" class="btn btn-success" style="margin: 10px;" id="sendGrblHelp">help ($)</button></li>
                 <li><button type="button" class="btn btn-success" style="margin: 10px;" id="sendGrblSettings">settings ($$)</button></li>
@@ -212,6 +212,10 @@
             <hr style="clear: both;" />
 
             <span style="color: #aaa; font-size: .8em;"><span style="color: red;">axis step hotkeys: </span>WASD, up-arrow, down-arrow</span>
+
+            <p style="color: #aaa; font-size: .8em; margin-top: 20px;">
+                <a href="http://xyzbots.com">&copy; XYZBots 2014</a>
+            </p>
 
             </ul>
         </div>

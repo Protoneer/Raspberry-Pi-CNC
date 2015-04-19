@@ -94,8 +94,9 @@ def convertChars(data):
     data = data.replace('>', '&gt;')
     data = data.replace('&', '&amp;')
     data = data.replace('"', '&quot;')
-    data = data.replace("'", '&#039;')
+    #data = data.replace('\'', '&#039;')
     data = data.replace('#', '&#035;')
+    #data = data.replace('$', '&#036;')
     return data
 
 
