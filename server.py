@@ -24,9 +24,9 @@ socketio = SocketIO(app)
 
 port = '/dev/ttyUSB0'
 baud = 9600
-timeout = 1
+timeout = 0.1
 serial_port = serial.Serial(port, baud, timeout=timeout)
-poll_interval = 1  # Disabled if 0
+poll_interval = 250  # Disabled if 0
 
 ##### Config - End #####
 
@@ -39,6 +39,7 @@ serialQueueCurrentMax = 0
 serialLastSerialRead = ''
 serialLastSerialWrite = []
 thread = None
+
 
 def start_serial(ser):
     ser.port = port
@@ -54,52 +55,55 @@ def start_serial(ser):
 def serial_port_listener(ser):
     global poll_interval
 
-    lastPoleTime = datetime.datetime.now() + datetime.timedelta(seconds=6)
+    lastPoleTime = int(round(time.time() * 1000)) + 6000
     while True:
-        if (ser.isOpen() == False):
+
+        if not ser.isOpen():
             start_serial(ser)
 
         if ser.inWaiting > 0:
             data = ser.readline()
             onDataReceived(data)
 
-        if poll_interval != 0 and datetime.datetime.now() > lastPoleTime + datetime.timedelta(seconds=poll_interval):
+        if poll_interval > 0 and int(round(time.time() * 1000)) > lastPoleTime + poll_interval:
             print "Sending ?"
-            lastPoleTime = datetime.datetime.now()
+            lastPoleTime = int(round(time.time() * 1000))
             ser.write("?")
+
 
 def onDataReceived(data):
     processData(data)
+
 
 def StartSerialListener():
     thread = threading.Thread(target=serial_port_listener, args=(serial_port,))
     thread.start()
 
+
 ##### Serial Work - End #####
 
 
 
-def sendSerialRead(color,type,line):
+def sendSerialRead(color, type, line):
     try:
-        line = line.replace('\r','').replace('\n','')
+        line = line.encode('ascii', 'replace').replace('\r', '').replace('\n', '')
         socketio.emit('serialRead',
-                      {'line':'<span style="color: '+color+';">'+type+': '+ line +'</span>'+"\n"},
+                      {'line': '<span style="color: ' + color + ';">' + type + ': ' + line + '</span>' + "\n"},
                       namespace='/test')
     except:
-        print "Error: SendSerialRead: " +color + ' - ' + type + ' - ' + line + ' - '
-        print sys.exc_info()[0]
+        print "Error: SendSerialRead: " + color + ' - ' + type + ' - ' + line + ' - '
+        print str(sys.exc_info())
+
 
 def convertChars(data):
     data = data.replace('<', '&lt;')
     data = data.replace('>', '&gt;')
     data = data.replace('&', '&amp;')
     data = data.replace('"', '&quot;')
-    #data = data.replace('\'', '&#039;')
+    # data = data.replace('\'', '&#039;')
     data = data.replace('#', '&#035;')
     #data = data.replace('$', '&#036;')
     return data
-
-
 
 
 def processData(data):
@@ -123,24 +127,24 @@ def processData(data):
         data = convertChars(data)
 
         if str(data).find('ok') == 0:
-            sendSerialRead('green','RESP', data)
+            sendSerialRead('green', 'RESP', data)
 
             # Run next in queue
             if len(serialQueue) > 0:
                 sendQueue()
 
-            #// remove first
-            #sp[port].lastSerialWrite.shift();
+                # // remove first
+                #sp[port].lastSerialWrite.shift();
 
         elif str(data).find('error') == 0:
-            sendSerialRead('red','RESP', data)
+            sendSerialRead('red', 'RESP', data)
 
             # Run next in queue
             if len(serialQueue) > 0:
                 sendQueue()
 
-            #// remove first
-            #sp[port].lastSerialWrite.shift();
+                # // remove first
+                #sp[port].lastSerialWrite.shift();
         else:
             sendSerialRead('grey', 'RESP', data)
 
@@ -152,9 +156,10 @@ def processData(data):
                       namespace='/test')
         serialLastSerialRead = data
 
+
 def sendQueue():
     global serialQueue
-    if(len(serialQueue) > 0):
+    if (len(serialQueue) > 0):
         lineToProcess = serialQueue.pop(0)
 
         # remove comments and trim
@@ -163,16 +168,13 @@ def sendQueue():
             sendQueue()
             return
 
-        sendSerialRead('black','SEND', line)
+        sendSerialRead('black', 'SEND', line)
 
-        serial_port.write(line+"\n")
+        serial_port.write(line + "\n")
 
-        #sp[port].lastSerialWrite.push(t);
+        # sp[port].lastSerialWrite.push(t);
 
         print line + "\n"
-
-
-
 
 
 ##### Flask #####
@@ -186,6 +188,7 @@ def index():
 def test_connect():
     print "WS:Connect"
     emit('ports', [{'comName': '/dev/ttyUSB0', 'manufacturer': 'undefined', 'pnpId': 'USB0'}])
+
 
 @socketio.on('gcodeLine', namespace='/test')
 def gcodeLine(data):
@@ -201,11 +204,13 @@ def gcodeLine(data):
 
     sendQueue()
 
+
 @socketio.on('clearQ', namespace='/test')
 def clearQueue(input):
     global serialQueue
     serialQueue = []
     emit('qStatus', {'currentLength': 0, 'currentMax': 0})
+
 
 @socketio.on('pause', namespace='/test')
 def pause(data):
@@ -218,6 +223,7 @@ def pause(data):
         serialQueuePaused = False
         sendQueue()
 
+
 @socketio.on('doReset', namespace='/test')
 def doReset(data):
     serial_port.write("\030")
@@ -227,12 +233,10 @@ def doReset(data):
     global serialLastSerialWrite
     global serialLastSerialRead
 
-
     serialQueue = []
     serialQueueCurrentMax = 0
     serialLastSerialWrite = []
     serialLastSerialRead = ''
-
 
 
 ##### Flask - End #####
