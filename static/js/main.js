@@ -1,5 +1,6 @@
 $(document).ready(function() {
 
+
 	$( window ).resize(function() {
 		// when header resizes, move ui down
 		$('.table-layout').css('margin-top',$('.navbar-collapse').height()-34);
@@ -7,6 +8,18 @@ $(document).ready(function() {
 
 	namespace = '/test'; // change to an empty string to use the global namespace
 	var socket = io.connect('http://' + document.domain + ':' + 5000 + namespace);
+
+
+	socket.on('connect',function() {
+		$("#ws-status").toggleClass("led-red led-green");
+		$("#ws-status").prop('title', 'Server Online');
+	});
+
+	socket.on('disconnect',function() {
+		$("#ws-status").toggleClass("led-red led-green");
+		$("#ws-status").prop('title', 'Server Offline');
+	});
+
 
 	socket.on('machineStatus', function (data) {
 		$('#mStatus').html(data.status);
