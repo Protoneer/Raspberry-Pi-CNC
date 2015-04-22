@@ -50,3 +50,21 @@
     background-color: #ddd;
     padding: 10px;
 }
+
+.led-red {
+    margin: 20px auto;
+    width: 12px;
+    height: 12px;
+    background-color: #F60;
+    border-radius: 50%;
+    box-shadow: #600 0 -1px 7px 1px, inset #F00 0 -1px 9px, #F00 0 2px 12px;
+}
+
+.led-green {
+    margin: 20px auto;
+    width: 12px;
+    height: 12px;
+    background-color: #6F0;
+    border-radius: 50%;
+    box-shadow: #060 0 -1px 7px 1px, inset #0F0 0 -1px 9px, #0A0 0 2px 12px;
+}
