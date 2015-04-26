@@ -20,13 +20,37 @@ socketio = SocketIO(app)
 
 
 
+class Machine:
+    status = ''
+    mpos_x = 0
+    mpos_y = 0
+    mpos_z = 0
+    wpos_x = 0
+    wpos_y = 0
+    wpos_z = 0
+
+    def parseData(self,data):
+        fields = str(data).replace("<", "").replace(">", "").replace("MPos:", "").replace("WPos:", "")\
+            .replace("\r\n", "").split(",")
+
+        self.status = fields[0]
+        self.mpos_x = fields[1]
+        self.mpos_y = fields[2]
+        self.mpos_z = fields[3]
+        self.wpos_x = fields[4]
+        self.wpos_y = fields[5]
+        self.wpos_z = fields[6]
+
+
 ##### Config #####
 
 port = '/dev/ttyUSB0'
-baud = 9600
+baud = 115200
 timeout = 0.1
 serial_port = serial.Serial(port, baud, timeout=timeout)
 poll_interval = 250  # Disabled if 0
+
+machine = Machine
 
 ##### Config - End #####
 
@@ -100,9 +124,7 @@ def convertChars(data):
     data = data.replace('>', '&gt;')
     data = data.replace('&', '&amp;')
     data = data.replace('"', '&quot;')
-    # data = data.replace('\'', '&#039;')
     data = data.replace('#', '&#035;')
-    #data = data.replace('$', '&#036;')
     return data
 
 
@@ -114,11 +136,11 @@ def processData(data):
     if data != "":
         # Handle status("?") results
         if str(data).find('<') == 0:
-            positions = str(data).replace("<", "").replace(">", "").replace("MPos:", "").replace("WPos:", "").replace(
-                "\r\n", "").split(",")
+            machine.parseData(data)
+
             socketio.emit('machineStatus',
-                          {'status': positions[0], 'mpos': [positions[1], positions[2], positions[3]],
-                           'wpos': [positions[4], positions[5], positions[6]]}, namespace='/test')
+                          {'status': machine.status, 'mpos': [machine.mpos_x, machine.mpos_y, machine.mpos_z],
+                           'wpos': [machine.wpos_x, machine.wpos_y, machine.wpos_z]}, namespace='/test')
             return
 
         if serialQueuePaused:
