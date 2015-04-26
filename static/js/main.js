@@ -29,7 +29,6 @@ $(document).ready(function() {
 		$('#wX').html('X: '+data.wpos[0]);
 		$('#wY').html('Y: '+data.wpos[1]);
 		$('#wZ').html('Z: '+data.wpos[2]);
-		//console.log(data);
 	});
 
 	$('#sendGrblHelp').on('click', function() {
