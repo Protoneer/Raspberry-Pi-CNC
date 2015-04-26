@@ -182,7 +182,6 @@ def sendQueue():
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
-    #return render_template('index.html')
 
 
 @socketio.on('connect', namespace='/test')
