@@ -1,4 +1,5 @@
 $(document).ready(function() {
+	var paused = false;
 
 
 	$( window ).resize(function() {
@@ -59,6 +60,12 @@ $(document).ready(function() {
 		$('#pause').click();
 	});
 
+	$('#settings_btn').on('click', function() {
+		$('#settings').modal(show=true)
+	});
+
+
+
 	socket.on('serialRead', function (data) {
 		$('#console').append(data.line);
 		$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
@@ -114,6 +121,21 @@ $(document).ready(function() {
 	$('#zM').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+$('#jogSize').val()+'\nG90'});
 	});
+	$('#hm').on('click', function() {
+		socket.emit('gcodeLine', { line: '$H'});
+	});
+	$('#abort').on('click', function() {
+		socket.emit('doReset', 1);
+	});
+	$('#stopStart').on('click', function() {
+		paused = !paused;
+		if(paused){
+			socket.emit('paused', 1);
+		} else {
+			socket.emit('paused', 0);
+		}
+	});
+
 
 	// WASD and up/down keys
 	$(document).keydown(function (e) {

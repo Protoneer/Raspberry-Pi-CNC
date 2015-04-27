@@ -45,12 +45,12 @@ class Machine:
 ##### Config #####
 
 port = '/dev/ttyUSB0'
-baud = 115200
+baud = 9600
 timeout = 0.1
 serial_port = serial.Serial(port, baud, timeout=timeout)
 poll_interval = 250  # Disabled if 0
 
-machine = Machine
+machineObj = Machine()
 
 ##### Config - End #####
 
@@ -100,6 +100,9 @@ def onDataReceived(data):
 
 
 def StartSerialListener():
+    if serial_port.isOpen():
+        serial_port.close()
+
     thread = threading.Thread(target=serial_port_listener, args=(serial_port,))
     thread.start()
 
@@ -132,15 +135,16 @@ def processData(data):
     global serialQueueCurrentMax
     global serialLastSerialRead
     global serialQueue
+    global machineObj
 
     if data != "":
         # Handle status("?") results
         if str(data).find('<') == 0:
-            machine.parseData(data)
+            machineObj.parseData(data)
 
             socketio.emit('machineStatus',
-                          {'status': machine.status, 'mpos': [machine.mpos_x, machine.mpos_y, machine.mpos_z],
-                           'wpos': [machine.wpos_x, machine.wpos_y, machine.wpos_z]}, namespace='/test')
+                          {'status': machineObj.status, 'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
+                           'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]}, namespace='/test')
             return
 
         if serialQueuePaused:
@@ -260,6 +264,13 @@ def doReset(data):
     serialLastSerialWrite = []
     serialLastSerialRead = ''
 
+@socketio.on('paused', namespace='/test')
+def doReset(data):
+    if data:
+        serial_port.write("~")
+    else:
+        serial_port.write("!")
+
 
 ##### Flask - End #####
 
@@ -270,5 +281,5 @@ if __name__ == '__main__':
         socketio.run(app, host='0.0.0.0')
     except:
         print "Error"
-        thread.stop()
         serial_port.close()
+        thread.stop()

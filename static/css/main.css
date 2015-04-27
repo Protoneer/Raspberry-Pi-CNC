@@ -68,3 +68,25 @@
     border-radius: 50%;
     box-shadow: #060 0 -1px 7px 1px, inset #0F0 0 -1px 9px, #0A0 0 2px 12px;
 }
+
+container {
+    width: 220px;
+    display: inline-block;
+}
+block {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    margin: 2px;
+    float: left;
+}
+block[h2] {
+    width: 104px;
+    padding :14px;
+}
+block[blk] {
+    padding-top : 14px;
+    padding-bottom: 14px;
+    padding-left : 0px;
+    padding-right : 0px;
+}
