@@ -54,8 +54,8 @@
                 <li><div title="Server Connection" id="ws-status" class="led-red"></div></li>
                 <!--li><button type="button" class="btn btn-default" style="margin: 10px;" onClick="window.open('/jscut/jscut.html','_blank'); return false;">Jscut CAM</button></li-->
                 <li><button type="button" class="btn btn-default" style="margin: 10px;" onClick="window.location='/index.html';">Simple Mode</button></li>
-                <li><button type="button" class="btn btn-default" style="margin: 10px;" id="sendReset">RESET (ctrl-x)</button></li>
-                <li><button type="button" class="btn btn-success" style="margin: 10px;" id="sendGrblSettings">settings ($$)</button></li>
+                <!--li><button type="button" class="btn btn-default" style="margin: 10px;" id="sendReset">RESET (ctrl-x)</button></li-->
+                <!--li><button type="button" class="btn btn-success" style="margin: 10px;" id="sendGrblSettings">settings ($$)</button></li-->
                 <li><button type="button" class="btn btn-default" style="margin: 10px;" id="settings_btn">Settings</button></li>
             </ul>
         </div>
@@ -126,32 +126,25 @@
             </select>
 
             <br style="clear: both;" />
+            <center>
+                <container>
+                    <block blk="" class="btn btn-default">-</block>
+                    <block blk="" id="yP" class="btn btn-default">+Y</block>
+                    <block blk="" class="btn btn-default">-</block>
+                    <block blk="" id="zP" class="btn btn-default">+Z</block>
+                    <block blk="" id="xM" class="btn btn-default">-X</block>
+                    <block blk="" id="hm" class="btn btn-default"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></block>
+                    <block blk="" id="xP" class="btn btn-default">+X</block>
+                    <block blk="" class="btn btn-default" style="visibility: hidden;"></block>
+                    <block blk="" class="btn btn-default">-</block>
+                    <block blk="" id="yM" class="btn btn-default">-Y</block>
+                    <block blk="" class="btn btn-default">-</block>
+                    <block blk="" id="zM" class="btn btn-default">+Z</block>
+                    <block h2=""  id="stopStart" class="btn btn-info">Start/Stop</block>
+                    <block h2="" id="abort" class="btn btn-danger">Abort</block>
+                </container>
+            </center>
 
-            <div style="clear: both; margin-bottom: 35px;">
-                <center>
-                    <button type="button" id="zP" class="btn btn-info btn-lg" style="width: 70px;">Z+</button>
-                </center>
-            </div>
-
-            <div style="float: right;">
-                <div style="float: left;">
-                    <button type="button" id="xM" class="btn btn-default btn-lg" style="float: left; width: 70px; margin-top: 10px;">X-</button>
-
-                    <div style="position: relative; top: -30px; float: left; margin: 10px; height: 78px;">
-                        <button type="button" id="yP" class="btn btn-default btn-lg" style="float: left; width: 70px;">Y+</button>
-                        <br />
-                        <button type="button" id="yM" class="btn btn-default btn-lg" style="float: left; width: 70px; margin-top: 10px;">Y-</button>
-                    </div>
-
-                    <button type="button" id="xP" class="btn btn-default btn-lg" style="float: left; width: 70px; margin-top: 10px;">X+</button>
-                </div>
-            </div>
-
-            <div style="clear: both; margin-top: 10px;">
-                <center>
-                    <button type="button" id="zM" class="btn btn-info btn-lg" style="width: 70px;">Z-</button>
-                </center>
-            </div>
 
             <hr style="clear: both;" />
 
@@ -196,7 +189,7 @@
         <h4 class="modal-title" id="myModalLabel">Machine Settings</h4>
       </div>
       <div class="modal-body">
-        ...
+        WIP
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
