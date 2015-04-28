@@ -64,8 +64,6 @@ $(document).ready(function() {
 		$('#settings').modal(show=true)
 	});
 
-
-
 	socket.on('serialRead', function (data) {
 		$('#console').append(data.line);
 		$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
