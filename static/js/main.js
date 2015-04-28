@@ -88,6 +88,14 @@ $(document).ready(function() {
 		socket.emit('gcodeLine', { line: 'G92 X0 Y0 Z0' });
 	});
 
+	$('#sendUnlock').on('click', function() {
+		socket.emit('gcodeLine', { line: '$X' });
+	});
+
+	$('#sendHome').on('click', function() {
+		socket.emit('gcodeLine', { line: '$H' });
+	});
+
 	// shift enter for send command
 	$('#command').keydown(function (e) {
 		if (e.shiftKey) {
