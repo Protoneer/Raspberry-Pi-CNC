@@ -45,7 +45,7 @@ class Machine:
 ##### Config #####
 
 port = '/dev/ttyUSB0'
-baud = 9600
+baud = 115200
 timeout = 0.1
 serial_port = serial.Serial(port, baud, timeout=timeout)
 poll_interval = 250  # Disabled if 0
