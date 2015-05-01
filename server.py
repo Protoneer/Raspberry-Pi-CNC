@@ -43,6 +43,8 @@ def processData(data):
     global machineObj
 
     if data != "":
+        data = cp.convertChars(data)
+
         # Handle status("?") results
         if str(data).find('<') == 0:
             machineObj.parseData(data)
@@ -55,8 +57,6 @@ def processData(data):
 
         if machineObj.QueuePaused:
             return
-
-        data = cp.convertChars(data)
 
         if str(data).find('ok') == 0:
             sendSerialRead('green', 'RESP', data)
