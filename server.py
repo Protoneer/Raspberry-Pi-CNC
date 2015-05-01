@@ -9,7 +9,6 @@ from flask.ext.socketio import SocketIO, emit, join_room, leave_room, close_room
 import threading
 import serial
 import time
-import datetime
 import sys
 import lib.machine as machine
 
