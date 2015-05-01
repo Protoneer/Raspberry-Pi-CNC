@@ -1,5 +1,6 @@
-from gevent import monkey
+import config
 
+from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask, render_template
@@ -8,8 +9,8 @@ from flask.ext.socketio import SocketIO, emit, join_room, leave_room, close_room
 import threading
 import serial
 import time
-import datetime
 import sys
+import lib.machine as machine
 
 
 app = Flask(__name__, static_url_path='')
@@ -18,16 +19,9 @@ app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
 
-
-
 ##### Config #####
-
-port = '/dev/ttyUSB0'
-baud = 9600
-timeout = 0.1
-serial_port = serial.Serial(port, baud, timeout=timeout)
-poll_interval = 250  # Disabled if 0
-
+serial_port = serial.Serial(config.serial_port, config.serial_baud, timeout=config.serial_timeout)
+machineObj = machine.Machine()
 ##### Config - End #####
 
 
@@ -42,9 +36,9 @@ thread = None
 
 
 def start_serial(ser):
-    ser.port = port
-    ser.baudrate = baud
-    ser.timeout = timeout
+    ser.port = config.serial_port
+    ser.baudrate = config.serial_baud
+    ser.timeout = config.serial_timeout
     ser.open()
     time.sleep(4)  # Needs time to start up
     ser.flush()
@@ -52,8 +46,7 @@ def start_serial(ser):
 
 # Loop that listens to the serial and runs onDataReceived with resutls
 # Also include GRBL poling "?" every "poll_interval" second
-def serial_port_listener(ser):
-    global poll_interval
+def serial_port_listener(ser, poll_interval):
 
     lastPoleTime = int(round(time.time() * 1000)) + 6000
     while True:
@@ -76,7 +69,10 @@ def onDataReceived(data):
 
 
 def StartSerialListener():
-    thread = threading.Thread(target=serial_port_listener, args=(serial_port,))
+    if serial_port.isOpen():
+        serial_port.close()
+
+    thread = threading.Thread(target=serial_port_listener, args=(serial_port,config.position_poll_interval ))
     thread.start()
 
 
@@ -100,9 +96,7 @@ def convertChars(data):
     data = data.replace('>', '&gt;')
     data = data.replace('&', '&amp;')
     data = data.replace('"', '&quot;')
-    # data = data.replace('\'', '&#039;')
     data = data.replace('#', '&#035;')
-    #data = data.replace('$', '&#036;')
     return data
 
 
@@ -110,15 +104,17 @@ def processData(data):
     global serialQueueCurrentMax
     global serialLastSerialRead
     global serialQueue
+    global machineObj
 
     if data != "":
         # Handle status("?") results
         if str(data).find('<') == 0:
-            positions = str(data).replace("<", "").replace(">", "").replace("MPos:", "").replace("WPos:", "").replace(
-                "\r\n", "").split(",")
+            machineObj.parseData(data)
+
             socketio.emit('machineStatus',
-                          {'status': positions[0], 'mpos': [positions[1], positions[2], positions[3]],
-                           'wpos': [positions[4], positions[5], positions[6]]}, namespace='/test')
+                          {'status': machineObj.status,
+                           'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
+                           'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]}, namespace='/test')
             return
 
         if serialQueuePaused:
@@ -181,7 +177,7 @@ def sendQueue():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return app.send_static_file('index.html')
 
 
 @socketio.on('connect', namespace='/test')
@@ -239,6 +235,14 @@ def doReset(data):
     serialLastSerialRead = ''
 
 
+@socketio.on('paused', namespace='/test')
+def doReset(data):
+    if data:
+        serial_port.write("~")
+    else:
+        serial_port.write("!")
+
+
 ##### Flask - End #####
 
 
@@ -248,5 +252,5 @@ if __name__ == '__main__':
         socketio.run(app, host='0.0.0.0')
     except:
         print "Error"
-        thread.stop()
         serial_port.close()
+        thread.stop()

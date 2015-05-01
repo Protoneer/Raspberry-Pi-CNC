@@ -51,7 +51,9 @@
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
 
+                <li><div title="Server Connection" id="ws-status" class="led-red"></div></li>
                 <!--li><button type="button" class="btn btn-default" style="margin: 10px;" onClick="window.open('/jscut/jscut.html','_blank'); return false;">Jscut CAM</button></li-->
+                <li><button type="button" class="btn btn-default" style="margin: 10px;" onClick="window.location='/advanced.html';">Advanced Mode</button></li>
                 <li><button type="button" class="btn btn-default" style="margin: 10px;" id="sendReset">RESET (ctrl-x)</button></li>
                 <li><button type="button" class="btn btn-success" style="margin: 10px;" id="sendGrblHelp">help ($)</button></li>
                 <li><button type="button" class="btn btn-success" style="margin: 10px;" id="sendGrblSettings">settings ($$)</button></li>
@@ -66,9 +68,11 @@
     <div class="table-layout">
         <div class="table-cell fixed-width-cell">
 
+            <!--
             <select id="choosePort" class="form-control">
                 <option val="no">Select a serial port</option>
             </select>
+            -->
 
             <h5 id="mStatus" style="text-align: right;">Select Port</h5>
 

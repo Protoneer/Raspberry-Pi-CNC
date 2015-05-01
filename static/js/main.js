@@ -1,4 +1,6 @@
 $(document).ready(function() {
+	var paused = false;
+
 
 	$( window ).resize(function() {
 		// when header resizes, move ui down
@@ -8,6 +10,18 @@ $(document).ready(function() {
 	namespace = '/test'; // change to an empty string to use the global namespace
 	var socket = io.connect('http://' + document.domain + ':' + 5000 + namespace);
 
+
+	socket.on('connect',function() {
+		$("#ws-status").toggleClass("led-red led-green");
+		$("#ws-status").prop('title', 'Server Online');
+	});
+
+	socket.on('disconnect',function() {
+		$("#ws-status").toggleClass("led-red led-green");
+		$("#ws-status").prop('title', 'Server Offline');
+	});
+
+
 	socket.on('machineStatus', function (data) {
 		$('#mStatus').html(data.status);
 		$('#mX').html('X: '+data.mpos[0]);
@@ -16,7 +30,6 @@ $(document).ready(function() {
 		$('#wX').html('X: '+data.wpos[0]);
 		$('#wY').html('Y: '+data.wpos[1]);
 		$('#wZ').html('Z: '+data.wpos[2]);
-		//console.log(data);
 	});
 
 	$('#sendGrblHelp').on('click', function() {
@@ -47,6 +60,10 @@ $(document).ready(function() {
 		$('#pause').click();
 	});
 
+	$('#settings_btn').on('click', function() {
+		$('#settings').modal(show=true)
+	});
+
 	socket.on('serialRead', function (data) {
 		$('#console').append(data.line);
 		$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
@@ -69,6 +86,14 @@ $(document).ready(function() {
 
 	$('#sendZero').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G92 X0 Y0 Z0' });
+	});
+
+	$('#sendUnlock').on('click', function() {
+		socket.emit('gcodeLine', { line: '$X' });
+	});
+
+	$('#sendHome').on('click', function() {
+		socket.emit('gcodeLine', { line: '$H' });
 	});
 
 	// shift enter for send command
@@ -102,6 +127,21 @@ $(document).ready(function() {
 	$('#zM').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+$('#jogSize').val()+'\nG90'});
 	});
+	$('#hm').on('click', function() {
+		socket.emit('gcodeLine', { line: '$H'});
+	});
+	$('#abort').on('click', function() {
+		socket.emit('doReset', 1);
+	});
+	$('#stopStart').on('click', function() {
+		paused = !paused;
+		if(paused){
+			socket.emit('paused', 1);
+		} else {
+			socket.emit('paused', 0);
+		}
+	});
+
 
 	// WASD and up/down keys
 	$(document).keydown(function (e) {
