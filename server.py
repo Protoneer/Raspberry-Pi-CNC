@@ -48,7 +48,6 @@ def start_serial(ser):
 # Loop that listens to the serial and runs onDataReceived with resutls
 # Also include GRBL poling "?" every "poll_interval" second
 def serial_port_listener(ser, poll_interval):
-    global poll_interval
 
     lastPoleTime = int(round(time.time() * 1000)) + 6000
     while True:
