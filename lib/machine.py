@@ -7,6 +7,13 @@ class Machine:
     wpos_y = 0
     wpos_z = 0
 
+    QueuePaused = False
+    Queue = []
+    QueueCurrentMax = 0
+    LastSerialReadData = ''
+    LastSerialSendData = []
+
+
     def parseData(self, data):
         fields = str(data).replace("<", "").replace(">", "").replace("MPos:", "").replace("WPos:", "") \
             .replace("\r\n", "").split(",")

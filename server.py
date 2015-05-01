@@ -9,6 +9,7 @@ import sys
 import lib.machine as machine
 import config
 import lib.serialConnection as sc
+import lib.commandProcessor as cp
 
 
 app = Flask(__name__, static_url_path='')
@@ -19,20 +20,9 @@ socketio = SocketIO(app)
 
 ##### Config #####
 
-serialConn = None
-
 def pollingFunction(ser):
     print "Sending: ?"
     ser.write('?')
-
-def dataProcessFunc(data):
-    processData(data)
-
-
-
-serialConn = sc.SerialConnection(config.serial_port, config.serial_baud, config.serial_timeout, dataProcessFunc, pollingFunction,
-                                 config.position_poll_interval)
-
 
 
 machineObj = machine.Machine()
@@ -41,10 +31,6 @@ machineObj = machine.Machine()
 
 
 ##### Serial Work #####
-serialQueue = []
-serialQueuePaused = False
-serialQueueCurrentMax = 0
-serialLastSerialRead = ''
 serialLastSerialWrite = []
 ##### Serial Work - End #####
 
@@ -61,19 +47,9 @@ def sendSerialRead(color, type, line):
         print str(sys.exc_info())
 
 
-def convertChars(data):
-    data = data.replace('<', '&lt;')
-    data = data.replace('>', '&gt;')
-    data = data.replace('&', '&amp;')
-    data = data.replace('"', '&quot;')
-    data = data.replace('#', '&#035;')
-    return data
 
 
 def processData(data):
-    global serialQueueCurrentMax
-    global serialLastSerialRead
-    global serialQueue
     global machineObj
 
     if data != "":
@@ -87,46 +63,41 @@ def processData(data):
                            'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]}, namespace='/test')
             return
 
-        if serialQueuePaused:
+        if machineObj.QueuePaused:
             return
 
-        data = convertChars(data)
+        data = cp.convertChars(data)
 
         if str(data).find('ok') == 0:
             sendSerialRead('green', 'RESP', data)
 
             # Run next in queue
-            if len(serialQueue) > 0:
+            if len(machineObj.Queue) > 0:
                 sendQueue()
-
-                # // remove first
-                #sp[port].lastSerialWrite.shift();
+                machineObj.LastSerialSendData.pop()
 
         elif str(data).find('error') == 0:
             sendSerialRead('red', 'RESP', data)
 
             # Run next in queue
-            if len(serialQueue) > 0:
+            if len(machineObj.Queue) > 0:
                 sendQueue()
-
-                # // remove first
-                #sp[port].lastSerialWrite.shift();
+                machineObj.LastSerialSendData.pop()
         else:
             sendSerialRead('grey', 'RESP', data)
 
-        if len(serialQueue) == 0:
-            serialQueueCurrentMax = 0
+        if len(machineObj.Queue) == 0:
+            machineObj.QueueCurrentMax = 0
 
         socketio.emit('qStatus',
-                      {'currentLength': len(serialQueue), 'currentMax': serialQueueCurrentMax},
+                      {'currentLength': len(machineObj.Queue), 'currentMax': machineObj.QueueCurrentMax},
                       namespace='/test')
-        serialLastSerialRead = data
+        machineObj.LastSerialReadData = data
 
 
 def sendQueue():
-    global serialQueue
-    if (len(serialQueue) > 0):
-        lineToProcess = serialQueue.pop(0)
+    if (len(machineObj.Queue) > 0):
+        lineToProcess =  machineObj.Queue.pop(0)
 
         # remove comments and trim
         line = lineToProcess.split(";")[0].rstrip().rstrip('\n').rstrip('\r')
@@ -138,7 +109,7 @@ def sendQueue():
 
         serialConn.serial_send(line + "\n")
 
-        # sp[port].lastSerialWrite.push(t);
+        machineObj.LastSerialSendData.append(line)
 
         print line + "\n"
 
@@ -158,7 +129,6 @@ def test_connect():
 
 @socketio.on('gcodeLine', namespace='/test')
 def gcodeLine(data):
-    global serialQueue
     print "WS:gcodeLine"
 
     # Split lines
@@ -166,27 +136,24 @@ def gcodeLine(data):
 
     # Add lines to the serial queue
     for line in lines:
-        serialQueue.append(line)
+        machineObj.Queue.append(line)
 
     sendQueue()
 
 
 @socketio.on('clearQ', namespace='/test')
 def clearQueue(input):
-    global serialQueue
-    serialQueue = []
+    machineObj.Queue = []
     emit('qStatus', {'currentLength': 0, 'currentMax': 0})
 
 
 @socketio.on('pause', namespace='/test')
 def pause(data):
-    global serialQueuePaused
-
     print data
     if data:
-        serialQueuePaused = True
+        machineObj.QueuePaused = True
     else:
-        serialQueuePaused = False
+        machineObj.QueuePaused = False
         sendQueue()
 
 
@@ -194,15 +161,10 @@ def pause(data):
 def doReset(data):
     serialConn.serial_send("\030")
 
-    global serialQueue
-    global serialQueueCurrentMax
-    global serialLastSerialWrite
-    global serialLastSerialRead
-
-    serialQueue = []
-    serialQueueCurrentMax = 0
-    serialLastSerialWrite = []
-    serialLastSerialRead = ''
+    machineObj.Queue = []
+    machineObj.QueueCurrentMax = 0
+    machineObj.LastSerialReadData = ''
+    machineObj.LastSerialSendData = []
 
 
 @socketio.on('paused', namespace='/test')
@@ -218,6 +180,8 @@ def doReset(data):
 
 if __name__ == '__main__':
     try:
+        serialConn = sc.SerialConnection(config.serial_port, config.serial_baud, config.serial_timeout, processData,
+                                         pollingFunction, config.position_poll_interval)
         serialConn.StartSerialListener()
         socketio.run(app, host='0.0.0.0')
     except:
