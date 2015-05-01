@@ -1,16 +1,14 @@
-import config
-
 from gevent import monkey
+
 monkey.patch_all()
 
 from flask import Flask, render_template
 from flask.ext.socketio import SocketIO, emit, join_room, leave_room, close_room, disconnect
 
-import threading
-import serial
-import time
 import sys
 import lib.machine as machine
+import config
+import lib.serialConnection as sc
 
 
 app = Flask(__name__, static_url_path='')
@@ -20,10 +18,26 @@ socketio = SocketIO(app)
 
 
 ##### Config #####
-serial_port = serial.Serial(config.serial_port, config.serial_baud, timeout=config.serial_timeout)
-machineObj = machine.Machine()
-##### Config - End #####
 
+serialConn = None
+
+def pollingFunction(ser):
+    print "Sending: ?"
+    ser.write('?')
+
+def dataProcessFunc(data):
+    processData(data)
+
+
+
+serialConn = sc.SerialConnection(config.serial_port, config.serial_baud, config.serial_timeout, dataProcessFunc, pollingFunction,
+                                 config.position_poll_interval)
+
+
+
+machineObj = machine.Machine()
+
+##### Config - End #####
 
 
 ##### Serial Work #####
@@ -32,50 +46,6 @@ serialQueuePaused = False
 serialQueueCurrentMax = 0
 serialLastSerialRead = ''
 serialLastSerialWrite = []
-thread = None
-
-
-def start_serial(ser):
-    ser.port = config.serial_port
-    ser.baudrate = config.serial_baud
-    ser.timeout = config.serial_timeout
-    ser.open()
-    time.sleep(4)  # Needs time to start up
-    ser.flush()
-
-
-# Loop that listens to the serial and runs onDataReceived with resutls
-# Also include GRBL poling "?" every "poll_interval" second
-def serial_port_listener(ser, poll_interval):
-
-    lastPoleTime = int(round(time.time() * 1000)) + 6000
-    while True:
-
-        if not ser.isOpen():
-            start_serial(ser)
-
-        if ser.inWaiting > 0:
-            data = ser.readline()
-            onDataReceived(data)
-
-        if poll_interval > 0 and int(round(time.time() * 1000)) > lastPoleTime + poll_interval:
-            print "Sending ?"
-            lastPoleTime = int(round(time.time() * 1000))
-            ser.write("?")
-
-
-def onDataReceived(data):
-    processData(data)
-
-
-def StartSerialListener():
-    if serial_port.isOpen():
-        serial_port.close()
-
-    thread = threading.Thread(target=serial_port_listener, args=(serial_port,config.position_poll_interval ))
-    thread.start()
-
-
 ##### Serial Work - End #####
 
 
@@ -166,7 +136,7 @@ def sendQueue():
 
         sendSerialRead('black', 'SEND', line)
 
-        serial_port.write(line + "\n")
+        serialConn.serial_send(line + "\n")
 
         # sp[port].lastSerialWrite.push(t);
 
@@ -222,7 +192,7 @@ def pause(data):
 
 @socketio.on('doReset', namespace='/test')
 def doReset(data):
-    serial_port.write("\030")
+    serialConn.serial_send("\030")
 
     global serialQueue
     global serialQueueCurrentMax
@@ -238,9 +208,9 @@ def doReset(data):
 @socketio.on('paused', namespace='/test')
 def doReset(data):
     if data:
-        serial_port.write("~")
+        serialConn.serial_send("~")
     else:
-        serial_port.write("!")
+        serialConn.serial_send("!")
 
 
 ##### Flask - End #####
@@ -248,9 +218,8 @@ def doReset(data):
 
 if __name__ == '__main__':
     try:
-        StartSerialListener()
+        serialConn.StartSerialListener()
         socketio.run(app, host='0.0.0.0')
     except:
         print "Error"
-        serial_port.close()
-        thread.stop()
+        serialConn.StopSerialListener()
