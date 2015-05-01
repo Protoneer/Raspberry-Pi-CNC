@@ -29,13 +29,6 @@ machineObj = machine.Machine()
 
 ##### Config - End #####
 
-
-##### Serial Work #####
-serialLastSerialWrite = []
-##### Serial Work - End #####
-
-
-
 def sendSerialRead(color, type, line):
     try:
         line = line.encode('ascii', 'replace').replace('\r', '').replace('\n', '')
@@ -45,9 +38,6 @@ def sendSerialRead(color, type, line):
     except:
         print "Error: SendSerialRead: " + color + ' - ' + type + ' - ' + line + ' - '
         print str(sys.exc_info())
-
-
-
 
 def processData(data):
     global machineObj
@@ -93,7 +83,6 @@ def processData(data):
                       {'currentLength': len(machineObj.Queue), 'currentMax': machineObj.QueueCurrentMax},
                       namespace='/test')
         machineObj.LastSerialReadData = data
-
 
 def sendQueue():
     if (len(machineObj.Queue) > 0):
