@@ -1,5 +1,6 @@
-from gevent import monkey
+import config
 
+from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask, render_template
@@ -10,6 +11,7 @@ import serial
 import time
 import datetime
 import sys
+import lib.machine as machine
 
 
 app = Flask(__name__, static_url_path='')
@@ -18,40 +20,9 @@ app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
 
-
-
-class Machine:
-    status = ''
-    mpos_x = 0
-    mpos_y = 0
-    mpos_z = 0
-    wpos_x = 0
-    wpos_y = 0
-    wpos_z = 0
-
-    def parseData(self,data):
-        fields = str(data).replace("<", "").replace(">", "").replace("MPos:", "").replace("WPos:", "")\
-            .replace("\r\n", "").split(",")
-
-        self.status = fields[0]
-        self.mpos_x = fields[1]
-        self.mpos_y = fields[2]
-        self.mpos_z = fields[3]
-        self.wpos_x = fields[4]
-        self.wpos_y = fields[5]
-        self.wpos_z = fields[6]
-
-
 ##### Config #####
-
-port = '/dev/ttyUSB0'
-baud = 115200
-timeout = 0.1
-serial_port = serial.Serial(port, baud, timeout=timeout)
-poll_interval = 250  # Disabled if 0
-
-machineObj = Machine()
-
+serial_port = serial.Serial(config.serial_port, config.serial_baud, timeout=config.serial_timeout)
+machineObj = machine.Machine()
 ##### Config - End #####
 
 
@@ -66,9 +37,9 @@ thread = None
 
 
 def start_serial(ser):
-    ser.port = port
-    ser.baudrate = baud
-    ser.timeout = timeout
+    ser.port = config.serial_port
+    ser.baudrate = config.serial_baud
+    ser.timeout = config.serial_timeout
     ser.open()
     time.sleep(4)  # Needs time to start up
     ser.flush()
@@ -76,7 +47,7 @@ def start_serial(ser):
 
 # Loop that listens to the serial and runs onDataReceived with resutls
 # Also include GRBL poling "?" every "poll_interval" second
-def serial_port_listener(ser):
+def serial_port_listener(ser, poll_interval):
     global poll_interval
 
     lastPoleTime = int(round(time.time() * 1000)) + 6000
@@ -103,7 +74,7 @@ def StartSerialListener():
     if serial_port.isOpen():
         serial_port.close()
 
-    thread = threading.Thread(target=serial_port_listener, args=(serial_port,))
+    thread = threading.Thread(target=serial_port_listener, args=(serial_port,config.position_poll_interval ))
     thread.start()
 
 
@@ -143,7 +114,8 @@ def processData(data):
             machineObj.parseData(data)
 
             socketio.emit('machineStatus',
-                          {'status': machineObj.status, 'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
+                          {'status': machineObj.status,
+                           'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
                            'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]}, namespace='/test')
             return
 
@@ -263,6 +235,7 @@ def doReset(data):
     serialQueueCurrentMax = 0
     serialLastSerialWrite = []
     serialLastSerialRead = ''
+
 
 @socketio.on('paused', namespace='/test')
 def doReset(data):
