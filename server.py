@@ -23,7 +23,6 @@ def webSocketEmit(MessageType,data):
               namespace='/test')
 
 
-##### Flask #####
 
 @app.route('/')
 def index():
@@ -47,7 +46,7 @@ def gcodeLine(data):
     for line in lines:
         machineObj.Queue.append(line)
 
-    cp.sendQueue()
+    cp.ProcessNextLineInQueue()
 
 
 @socketio.on('clearQ', namespace='/test')
@@ -63,7 +62,7 @@ def pause(data):
         machineObj.QueuePaused = True
     else:
         machineObj.QueuePaused = False
-        cp.sendQueue()
+        cp.ProcessNextLineInQueue()
 
 
 @socketio.on('doReset', namespace='/test')
@@ -84,10 +83,8 @@ def doReset(data):
         serialConn.serial_send("!")
 
 
-##### Flask - End #####
-
-
 if __name__ == '__main__':
+    serialConn = None
     try:
         machineObj = machine.Machine()
 

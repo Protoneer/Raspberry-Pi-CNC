@@ -32,12 +32,6 @@ def processData(data):
                           {'status': machineObj.status,
                            'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
                            'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]})
-            '''
-            socketio.emit('machineStatus',
-                          {'status': machineObj.status,
-                           'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
-                           'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]}, namespace='/test')
-            '''
             return
 
         if machineObj.QueuePaused:
@@ -50,7 +44,7 @@ def processData(data):
 
             # Run next in queue
             if len(machineObj.Queue) > 0:
-                sendQueue()
+                ProcessNextLineInQueue()
                 machineObj.LastSerialSendData.pop()
 
         elif str(data).find('error') == 0:
@@ -58,7 +52,7 @@ def processData(data):
 
             # Run next in queue
             if len(machineObj.Queue) > 0:
-                sendQueue()
+                ProcessNextLineInQueue()
                 machineObj.LastSerialSendData.pop()
         else:
             sendSerialRead('grey', 'RESP', data)
@@ -69,23 +63,17 @@ def processData(data):
         webSocketEmit('qStatus',
                       {'currentLength': len(machineObj.Queue), 'currentMax': machineObj.QueueCurrentMax})
 
-        '''
-        socketio.emit('qStatus',
-                      {'currentLength': len(machineObj.Queue), 'currentMax': machineObj.QueueCurrentMax},
-                      namespace='/test')
-        '''
-
         machineObj.LastSerialReadData = data
 
 
-def sendQueue():
+def ProcessNextLineInQueue():
     if (len(machineObj.Queue) > 0):
-        lineToProcess =  machineObj.Queue.pop(0)
+        lineToProcess = machineObj.Queue.pop(0)
 
         # remove comments and trim
         line = lineToProcess.split(";")[0].rstrip().rstrip('\n').rstrip('\r')
         if line == "" or line == ";":
-            sendQueue()
+            ProcessNextLineInQueue()
             return
 
         sendSerialRead('black', 'SEND', line)
@@ -101,11 +89,6 @@ def sendSerialRead(color, type, line):
         line = line.encode('ascii', 'replace').replace('\r', '').replace('\n', '')
         webSocketEmit('serialRead',
                       {'line': '<span style="color: ' + color + ';">' + type + ': ' + line + '</span>' + "\n"})
-        '''
-        socketio.emit('serialRead',
-                      {'line': '<span style="color: ' + color + ';">' + type + ': ' + line + '</span>' + "\n"},
-                      namespace='/test')
-        '''
     except:
         print "Error: SendSerialRead: " + color + ' - ' + type + ' - ' + line + ' - '
         print str(sys.exc_info())
