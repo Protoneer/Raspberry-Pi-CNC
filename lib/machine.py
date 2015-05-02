@@ -25,3 +25,7 @@ class Machine:
         self.wpos_x = fields[4]
         self.wpos_y = fields[5]
         self.wpos_z = fields[6]
+
+    def pollingFunction(self, ser):
+        print "Sending: ?"
+        ser.write('?')
