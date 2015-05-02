@@ -2,8 +2,8 @@ from gevent import monkey
 
 monkey.patch_all()
 
-from flask import Flask, render_template
-from flask.ext.socketio import SocketIO, emit, join_room, leave_room, close_room, disconnect
+from flask import Flask
+from flask.ext.socketio import SocketIO, emit, disconnect
 
 import sys
 import lib.machine as machine
@@ -17,90 +17,10 @@ app.debug = True
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
-
-##### Config #####
-
-def pollingFunction(ser):
-    print "Sending: ?"
-    ser.write('?')
-
-
-machineObj = machine.Machine()
-
-##### Config - End #####
-
-def sendSerialRead(color, type, line):
-    try:
-        line = line.encode('ascii', 'replace').replace('\r', '').replace('\n', '')
-        socketio.emit('serialRead',
-                      {'line': '<span style="color: ' + color + ';">' + type + ': ' + line + '</span>' + "\n"},
-                      namespace='/test')
-    except:
-        print "Error: SendSerialRead: " + color + ' - ' + type + ' - ' + line + ' - '
-        print str(sys.exc_info())
-
-def processData(data):
-    global machineObj
-
-    if data != "":
-        # Handle status("?") results
-        if str(data).find('<') == 0:
-            machineObj.parseData(data)
-
-            socketio.emit('machineStatus',
-                          {'status': machineObj.status,
-                           'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
-                           'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]}, namespace='/test')
-            return
-
-        if machineObj.QueuePaused:
-            return
-
-        data = cp.convertChars(data)
-
-        if str(data).find('ok') == 0:
-            sendSerialRead('green', 'RESP', data)
-
-            # Run next in queue
-            if len(machineObj.Queue) > 0:
-                sendQueue()
-                machineObj.LastSerialSendData.pop()
-
-        elif str(data).find('error') == 0:
-            sendSerialRead('red', 'RESP', data)
-
-            # Run next in queue
-            if len(machineObj.Queue) > 0:
-                sendQueue()
-                machineObj.LastSerialSendData.pop()
-        else:
-            sendSerialRead('grey', 'RESP', data)
-
-        if len(machineObj.Queue) == 0:
-            machineObj.QueueCurrentMax = 0
-
-        socketio.emit('qStatus',
-                      {'currentLength': len(machineObj.Queue), 'currentMax': machineObj.QueueCurrentMax},
-                      namespace='/test')
-        machineObj.LastSerialReadData = data
-
-def sendQueue():
-    if (len(machineObj.Queue) > 0):
-        lineToProcess =  machineObj.Queue.pop(0)
-
-        # remove comments and trim
-        line = lineToProcess.split(";")[0].rstrip().rstrip('\n').rstrip('\r')
-        if line == "" or line == ";":
-            sendQueue()
-            return
-
-        sendSerialRead('black', 'SEND', line)
-
-        serialConn.serial_send(line + "\n")
-
-        machineObj.LastSerialSendData.append(line)
-
-        print line + "\n"
+def webSocketEmit(MessageType,data):
+    socketio.emit(MessageType,
+              data,
+              namespace='/test')
 
 
 ##### Flask #####
@@ -127,7 +47,7 @@ def gcodeLine(data):
     for line in lines:
         machineObj.Queue.append(line)
 
-    sendQueue()
+    cp.sendQueue()
 
 
 @socketio.on('clearQ', namespace='/test')
@@ -143,7 +63,7 @@ def pause(data):
         machineObj.QueuePaused = True
     else:
         machineObj.QueuePaused = False
-        sendQueue()
+        cp.sendQueue()
 
 
 @socketio.on('doReset', namespace='/test')
@@ -169,8 +89,13 @@ def doReset(data):
 
 if __name__ == '__main__':
     try:
-        serialConn = sc.SerialConnection(config.serial_port, config.serial_baud, config.serial_timeout, processData,
-                                         pollingFunction, config.position_poll_interval)
+        machineObj = machine.Machine()
+
+        serialConn = sc.SerialConnection(config.serial_port, config.serial_baud, config.serial_timeout, cp.processData,
+                                         machineObj.pollingFunction, config.position_poll_interval)
+
+        cp.init(machineObj, webSocketEmit, serialConn)
+
         serialConn.StartSerialListener()
         socketio.run(app, host='0.0.0.0')
     except:
