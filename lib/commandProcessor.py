@@ -1,4 +1,9 @@
 import sys
+import re
+
+machineObj = None
+webSocketEmit = None
+serialConn = None
 
 def convertChars(data):
     data = data.replace('<', '&lt;')
@@ -7,10 +12,6 @@ def convertChars(data):
     data = data.replace('"', '&quot;')
     data = data.replace('#', '&#035;')
     return data
-
-machineObj = None
-webSocketEmit = None
-serialConn = None
 
 def init(mac,wsEmit,serialConnection):
     global machineObj
@@ -21,50 +22,81 @@ def init(mac,wsEmit,serialConnection):
     webSocketEmit = wsEmit
     serialConn = serialConnection
 
+
+
 # Processes Commands one line at a time
 def processData(data):
     if data != "":
-        # Handle status("?") results
-        if str(data).find('<') == 0:
-            machineObj.parseData(data)
-
-            webSocketEmit('machineStatus',
-                          {'status': machineObj.status,
-                           'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
-                           'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]})
+        if not SetUP(data):
             return
 
-        if machineObj.QueuePaused:
-            return
-
-        data = convertChars(data)
-
-        if str(data).find('ok') == 0:
-            sendSerialRead('green', 'RESP', data)
+        if IsOK(data):
+            ForwardSerialDataToSubscribers('green', 'RESP', convertChars(data))
 
             # Run next in queue
             if len(machineObj.Queue) > 0:
                 ProcessNextLineInQueue()
                 machineObj.LastSerialSendData.pop()
 
-        elif str(data).find('error') == 0:
-            sendSerialRead('red', 'RESP', data)
+        elif IsError(data):
+            ForwardSerialDataToSubscribers('red', 'RESP', convertChars(data))
 
             # Run next in queue
             if len(machineObj.Queue) > 0:
                 ProcessNextLineInQueue()
                 machineObj.LastSerialSendData.pop()
+
+        elif IsMachineSetting(data):
+            UpdateMachineSettings(data)
+            #SendMachineSettings()
+            #ForwardSerialDataToSubscribers('blue', 'RESP', convertChars(data))
         else:
-            sendSerialRead('grey', 'RESP', data)
+            ForwardSerialDataToSubscribers('grey', 'RESP', convertChars(data))
 
-        if len(machineObj.Queue) == 0:
-            machineObj.QueueCurrentMax = 0
+        TearDown(data)
 
-        webSocketEmit('qStatus',
-                      {'currentLength': len(machineObj.Queue), 'currentMax': machineObj.QueueCurrentMax})
+def IsMachineSetting(data):
+    return re.search("^\$\d+=.*\(.*\).*", data)
 
-        machineObj.LastSerialReadData = data
+def IsError(data):
+    return re.search("^error", data)
 
+def IsOK(data):
+    return re.search("^ok",data)
+
+def IsStatusMessage(data):
+    return re.search("^\<",data)
+
+def UpdateMachineSettings(data):
+    machineObj.Settings.append(data)
+
+
+def SendMachineSettings():
+    webSocketEmit('machineSettings',
+                  {'status': machineObj.status,
+                   'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
+                   'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]})
+
+
+def SetUP(data):
+    # Handle status("?") results
+    if IsStatusMessage(data):
+        machineObj.parseData(data)
+        webSocketEmit('machineStatus',
+                      {'status': machineObj.status,
+                       'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
+                       'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]})
+        return False
+    if machineObj.QueuePaused:
+        return False
+    return True
+
+def TearDown(data):
+    if len(machineObj.Queue) == 0:
+        machineObj.QueueCurrentMax = 0
+    webSocketEmit('qStatus',
+                  {'currentLength': len(machineObj.Queue), 'currentMax': machineObj.QueueCurrentMax})
+    machineObj.LastSerialReadData = data
 
 def ProcessNextLineInQueue():
     if (len(machineObj.Queue) > 0):
@@ -76,7 +108,7 @@ def ProcessNextLineInQueue():
             ProcessNextLineInQueue()
             return
 
-        sendSerialRead('black', 'SEND', line)
+        ForwardSerialDataToSubscribers('black', 'SEND', line)
 
         serialConn.serial_send(line + "\n")
 
@@ -84,7 +116,7 @@ def ProcessNextLineInQueue():
 
         print line + "\n"
 
-def sendSerialRead(color, type, line):
+def ForwardSerialDataToSubscribers(color, type, line):
     try:
         line = line.encode('ascii', 'replace').replace('\r', '').replace('\n', '')
         webSocketEmit('serialRead',

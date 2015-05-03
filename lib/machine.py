@@ -13,6 +13,8 @@ class Machine:
     LastSerialReadData = ''
     LastSerialSendData = []
 
+    Settings = []
+
 
     def parseData(self, data):
         fields = str(data).replace("<", "").replace(">", "").replace("MPos:", "").replace("WPos:", "") \

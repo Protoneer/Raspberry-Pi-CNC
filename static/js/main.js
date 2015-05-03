@@ -21,6 +21,14 @@ $(document).ready(function() {
 		$("#ws-status").prop('title', 'Server Offline');
 	});
 
+	socket.on('machineSettings', function(data){
+		var settingHtml = '<pre>';
+		data.forEach(function(setting) {
+			settingHtml += '<span>'+setting+'</span>';
+		});
+		$('#settings').find('.modal-body').html(settingHtml+'</pre>');
+	});
+
 
 	socket.on('machineStatus', function (data) {
 		$('#mStatus').html(data.status);
@@ -61,7 +69,14 @@ $(document).ready(function() {
 	});
 
 	$('#settings_btn').on('click', function() {
-		$('#settings').modal(show=true)
+		socket.emit('refreshSettings',0)
+		$('#settings').find('.modal-body').html('Loading...');
+		$('#settings').modal('show');
+		setTimeout(function (){
+			socket.emit('machineSettings',0)
+		},2000);
+
+
 	});
 
 	socket.on('serialRead', function (data) {

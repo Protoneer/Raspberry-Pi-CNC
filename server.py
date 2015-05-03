@@ -82,6 +82,16 @@ def doReset(data):
     else:
         serialConn.serial_send("!")
 
+@socketio.on('refreshSettings', namespace='/test')
+def getSettings(data):
+    machineObj.Settings = []
+    machineObj.Queue.append("$$")
+    cp.ProcessNextLineInQueue()
+
+@socketio.on('machineSettings', namespace='/test')
+def getSettings(data):
+    emit('machineSettings', machineObj.Settings)
+
 
 if __name__ == '__main__':
     serialConn = None
