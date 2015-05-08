@@ -46,7 +46,7 @@ def gcodeLine(data):
     for line in lines:
         machineObj.Queue.append(line)
 
-    cp.ProcessNextLineInQueue()
+    cp.SendNextInQueueIfNeeded()
 
 
 @socketio.on('clearQ', namespace='/test')
@@ -62,8 +62,12 @@ def pause(data):
         machineObj.QueuePaused = True
     else:
         machineObj.QueuePaused = False
-        cp.ProcessNextLineInQueue()
+        cp.SendNextInQueueIfNeeded()
 
+@socketio.on('command', namespace='/test')
+def command(data):
+    if data['cmd'] == 'singleCommandMode':
+        machineObj.SingleCommandMode = data['cmd']
 
 @socketio.on('doReset', namespace='/test')
 def doReset(data):
@@ -86,7 +90,7 @@ def doReset(data):
 def getSettings(data):
     machineObj.Settings = []
     machineObj.Queue.append("$$")
-    cp.ProcessNextLineInQueue()
+    cp.SendNextInQueueIfNeeded()
 
 @socketio.on('machineSettings', namespace='/test')
 def getSettings(data):

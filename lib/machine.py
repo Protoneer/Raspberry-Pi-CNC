@@ -12,6 +12,7 @@ class Machine:
     QueueCurrentMax = 0
     LastSerialReadData = ''
     LastSerialSendData = []
+    SingleCommandMode = False
 
     Settings = []
 

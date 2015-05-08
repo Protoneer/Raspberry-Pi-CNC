@@ -75,8 +75,14 @@ $(document).ready(function() {
 		setTimeout(function (){
 			socket.emit('machineSettings',0)
 		},2000);
+	});
 
-
+	$('#chk_singleCommandMode').on('click', function() {
+		if ($('#chk_singleCommandMode').is(":checked")){
+			socket.emit('command',{"cmd":"singleCommandMode","value":true});
+		} else {
+			socket.emit('command',{"cmd":"singleCommandMode","value":false});
+		}
 	});
 
 	socket.on('serialRead', function (data) {
