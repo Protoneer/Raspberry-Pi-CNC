@@ -127,13 +127,27 @@ def ProcessNextLineInQueue():
 
         ForwardSerialDataToSubscribers('black', 'SEND', line)
 
-        # This is where data is sent to GRBL- This is the point where custom
-        # commands can be injected.
-        serialConn.serial_send(line + "\n")
+		commandRouting(line)
 
         machineObj.LastSerialSendData.append(line)
 
         print line + "\n"
+		
+def commandRouting(line):
+	if line == "RUNPYTHON":
+		SendRunPythonCommand(line)
+	else:
+		SendSerialCommand(line)
+
+def SendSerialCommand(line):
+	serialConn.serial_send(line + "\n")
+
+def SendRunPythonCommand(line):
+	import subprocess
+	subprocess(["ping","127.0.0.1"])
+	print "PYTHON ROCKS!!!"
+
+	
 
 def ForwardSerialDataToSubscribers(color, type, line):
     try:
