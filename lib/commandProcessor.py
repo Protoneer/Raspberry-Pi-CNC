@@ -18,7 +18,8 @@ def convertChars(data):
     data = data.replace('#', '&#035;')
     return data
 
-def init(mac,wsEmit,serialConnection):
+
+def init(mac, wsEmit, serialConnection):
     global machineObj
     global webSocketEmit
     global serialConn
@@ -48,17 +49,22 @@ def processData(data):
 
         TearDown(data)
 
+
 def IsMachineSetting(data):
     return re.search("^\$\d+=.*\(.*\).*", data)
+
 
 def IsError(data):
     return re.search("^error", data)
 
+
 def IsOK(data):
-    return re.search("^ok",data)
+    return re.search("^ok", data)
+
 
 def IsStatusMessage(data):
-    return re.search("^\<",data)
+    return re.search("^\<", data)
+
 
 def UpdateMachineSettings(data):
     machineObj.Settings.append(data)
@@ -87,6 +93,7 @@ def SetUP(data):
         return False
     return True
 
+
 # Based on the SingleCommand Setting it will wait for the machine to go to idle before sending or full GRBL's command buffer
 def SendNextInQueueIfNeeded():
     global lastPoleTime
@@ -102,10 +109,10 @@ def SendNextInQueueIfNeeded():
             if len(machineObj.LastSerialSendData) > 0:
                 machineObj.LastSerialSendData.pop()
 
+
 def resetPollingTime():
     global lastPoleTime
     lastPoleTime = int(round(time.time() * 1000)) + serialConn.polling_interval + 500
-
 
 
 def TearDown(data):
@@ -115,7 +122,9 @@ def TearDown(data):
                   {'currentLength': len(machineObj.Queue), 'currentMax': machineObj.QueueCurrentMax})
     machineObj.LastSerialReadData = data
 
+
 def ProcessNextLineInQueue():
+    line = ""
     if (len(machineObj.Queue) > 0):
         lineToProcess = machineObj.Queue.pop(0)
 
@@ -127,27 +136,30 @@ def ProcessNextLineInQueue():
 
         ForwardSerialDataToSubscribers('black', 'SEND', line)
 
-		commandRouting(line)
+        commandRouting(line)
 
-        machineObj.LastSerialSendData.append(line)
+    machineObj.LastSerialSendData.append(line)
 
-        print line + "\n"
-		
+    print line + "\n"
+
+
 def commandRouting(line):
-	if line == "RUNPYTHON":
-		SendRunPythonCommand(line)
-	else:
-		SendSerialCommand(line)
+    if line == "RUNPYTHON":
+        SendRunPythonCommand(line)
+    else:
+        SendSerialCommand(line)
+
 
 def SendSerialCommand(line):
-	serialConn.serial_send(line + "\n")
+    serialConn.serial_send(line + "\n")
+
 
 def SendRunPythonCommand(line):
-	import subprocess
-	subprocess(["ping","127.0.0.1"])
-	print "PYTHON ROCKS!!!"
+    import subprocess
 
-	
+    subprocess.call(['ping', '-c', '3', '127.0.0.1'])
+    print "PYTHON ROCKS!!!"
+
 
 def ForwardSerialDataToSubscribers(color, type, line):
     try:
