@@ -138,9 +138,9 @@ def ProcessNextLineInQueue():
 
         commandRouting(line)
 
-    machineObj.LastSerialSendData.append(line)
+        machineObj.LastSerialSendData.append(line)
 
-    print line + "\n"
+        print line + "\n"
 
 
 def commandRouting(line):
