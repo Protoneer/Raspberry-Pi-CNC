@@ -72,78 +72,73 @@ $(document).ready(function() {
 				break;
 			case "abort":
 			case "sendReset":
-				socket.emit('doReset', 1);
+				socket.emit('command',{"cmd":"doReset"});
 				break;
 			case "sendUnlock":
-				socket.emit('gcodeLine', { line: '$X' });
+				socket.emit('command',{"cmd":"gcodeLine","line":"$X"});
 				break;
-			case "hm":
 			case "sendHome":
-				socket.emit('gcodeLine', { line: '$H' });
+				socket.emit('command',{"cmd":"gcodeLine","line":"$H"});
 				break;
 			case "xM":
-				socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' X-'+$('#jogSize').val()+'\nG90'});
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' X-'+$('#jogSize').val()+'\nG90'});
 				break;
 			case "xP":
-				socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' X'+$('#jogSize').val()+'\nG90'});
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' X'+$('#jogSize').val()+'\nG90'});
 				break;
 			case "yP":
-				socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Y'+$('#jogSize').val()+'\nG90'});
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' Y'+$('#jogSize').val()+'\nG90'});
 				break;
 			case "yM":
-				socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Y-'+$('#jogSize').val()+'\nG90'});
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' Y-'+$('#jogSize').val()+'\nG90'});
 				break;
 			case "zP":
-				socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z'+$('#jogSize').val()+'\nG90'});
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' Z'+$('#jogSize').val()+'\nG90'});
 				break;
 			case "zM":
-				socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+$('#jogSize').val()+'\nG90'});
-				break;
-			case "stopStart":
-				paused = !paused;
-				if(paused){
-					socket.emit('paused', 1);
-				} else {
-					socket.emit('paused', 0);
-				}
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+$('#jogSize').val()+'\nG90'});
 				break;
 			case "sendGrblHelp":
-				socket.emit('gcodeLine', { line: '$' });
+				socket.emit('command',{"cmd":"gcodeLine","line":"$"});
 				break;
 			case "sendGrblSettings":
-				socket.emit('gcodeLine', { line: '$$' });
+				socket.emit('command',{"cmd":"gcodeLine","line":"$$"});
 				break;
 			case "sendCommand":
-				socket.emit('gcodeLine', { line: $('#command').val() });
+				socket.emit('command',{"cmd":"gcodeLine","line":$('#command').val()});
 				$('#command').val('');
 				break;
 			case "sendZero":
-				socket.emit('gcodeLine', { line: 'G92 X0 Y0 Z0' });
+				socket.emit('command',{"cmd":"gcodeLine","line":'G92 X0 Y0 Z0'});
+				break;
+			case "stopStart":
+				paused = !paused;
+				socket.emit('command',{"cmd":"paused","value":paused});
 				break;
 			case "pause":
 				if ($('#pause').html() == 'Pause') {
 					// pause queue on server
-					socket.emit('pause', 1);
+					socket.emit('command',{"cmd":"pause","value":true});
 					$('#pause').html('Unpause');
 					$('#clearQ').removeClass('disabled');
 				} else {
-					socket.emit('pause', 0);
+					socket.emit('command',{"cmd":"pause","value":false});
 					$('#pause').html('Pause');
 					$('#clearQ').addClass('disabled');
 				}
 				break;
 			case "clearQ":
 				// if paused let user clear the command queue
-				socket.emit('clearQ', 1);
+				socket.emit('command',{"cmd":"clearQ"});
 				// must clear queue first, then unpause (click) because unpause does a sendFirstQ on server
 				$('#pause').click();
 				break;
 			case "settings_btn":
-				socket.emit('refreshSettings',0)
+				socket.emit('command',{"cmd":"refreshSettings"});
 				$('#settings').find('.modal-body').html('Loading...');
 				$('#settings').modal('show');
 				setTimeout(function (){
-					socket.emit('machineSettings',0)
+					socket.emit('command',{"cmd":"machineSettings"});
 				},2000);
 				break;
 			case "mpC":
@@ -232,7 +227,7 @@ $(document).ready(function() {
 			if (ev.type == 'drop') {
 				reader.onloadend = function (ev) {
 					document.getElementById('command').value = this.result;
-					openGCodeFromText();
+					//openGCodeFromText();
 				};
 				reader.readAsText (ev.dataTransfer.files[0]);
 			}
@@ -247,7 +242,7 @@ $(document).ready(function() {
 		fileInput.addEventListener('change', function(e) {
 			reader.onloadend = function (ev) {
 				document.getElementById('command').value = this.result;
-				openGCodeFromText();
+				//openGCodeFromText();
 			};
 			reader.readAsText (fileInput.files[0]);
 		});
