@@ -1,0 +1,13 @@
+{
+  "name": "Testing",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "mocha -R spec"
+  },
+  "dependencies": {
+    "mocha": "^2.1.0",
+    "should": "^4.6.0",
+    "socket.io": "0.9.16",
+    "socket.io-client": "0.9.16"
+  }
+}

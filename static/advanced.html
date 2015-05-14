@@ -60,7 +60,7 @@
 </div>
 
 
-<div class="container-fluid">
+<div class="container-fluid" style="padding-left: 0px;padding-right: 0px;">
     <div class="table-layout">
         <div class="table-cell fixed-width-cell">
 
@@ -111,6 +111,11 @@
 
             <center>
                 <button type="button" class="btn btn-default" style="margin-top: 5px;" id="sendZero">Zero Machine (G92)</button>
+            </center>
+
+
+            <center>
+                <label><input type="checkbox" value="" id="chk_singleCommandMode">Single Command Mode Enabled</label>
             </center>
 
             <hr style="clear: both;" />
@@ -178,7 +183,7 @@
             </div><!-- /input-group -->
 
             <div style="clear: both; float: right; margin-top: 10px;">
-                <span class="btn btn-default btn-file">Upload GCODE <input type="file" id="fileInput" /></span>
+                <span class="btn btn-default btn-file">Load File<input type="file" id="fileInput" /></span>
                 <button type="button" class="btn btn-default" id="sendCommand">Send to CNC (shift+enter)</button>
             </div>
 

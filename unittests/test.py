@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import unittest
 import sys
 
@@ -19,3 +20,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+=======
+
+>>>>>>> d166e2c81cd178728562f93efb52e60df56a9230

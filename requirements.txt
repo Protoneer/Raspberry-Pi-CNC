@@ -2,3 +2,4 @@ sudo apt-get install python-dev
 sudo apt-get install python-pip
 sudo pip install flask
 sudo pip install flask-socketio
+# http://www.microsoft.com/en-us/download/details.aspx?id=44266

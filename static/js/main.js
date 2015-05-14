@@ -14,87 +14,149 @@ $(document).ready(function() {
 	socket.on('connect',function() {
 		$("#ws-status").toggleClass("led-red led-green");
 		$("#ws-status").prop('title', 'Server Online');
-	});
 
-	socket.on('disconnect',function() {
-		$("#ws-status").toggleClass("led-red led-green");
-		$("#ws-status").prop('title', 'Server Offline');
-	});
+		socket.on('machineStatus', function (data) {
+			$('#mStatus').html(data.status);
+			$('#mX').html('X: '+data.mpos[0]);
+			$('#mY').html('Y: '+data.mpos[1]);
+			$('#mZ').html('Z: '+data.mpos[2]);
+			$('#wX').html('X: '+data.wpos[0]);
+			$('#wY').html('Y: '+data.wpos[1]);
+			$('#wZ').html('Z: '+data.wpos[2]);
+		});
+
+		socket.on('machineSettings', function(data){
+			var settingHtml = '<pre>';
+			data.forEach(function(setting) {
+				settingHtml += '<span>'+setting+'</span>';
+			});
+			$('#settings').find('.modal-body').html(settingHtml+'</pre>');
+		});
+
+		socket.on('disconnect',function() {
+			$("#ws-status").toggleClass("led-red led-green");
+			$("#ws-status").prop('title', 'Server Offline');
+		});
+
+		socket.on('serialRead', function (data) {
+			$('#console').append(data.line);
+			$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
+		});
+
+		socket.on('qStatus', function (data) {
+			$('#qStatus').html(data.currentLength+'/'+data.currentMax);
+		});
+
+		/*
+			socket.on('gcodeFromJscut', function (data) {
+				$('#command').val(data.val);
+				openGCodeFromText();
+				alert('new data from jscut');
+			});
+		*/
 
 
-	socket.on('machineStatus', function (data) {
-		$('#mStatus').html(data.status);
-		$('#mX').html('X: '+data.mpos[0]);
-		$('#mY').html('Y: '+data.mpos[1]);
-		$('#mZ').html('Z: '+data.mpos[2]);
-		$('#wX').html('X: '+data.wpos[0]);
-		$('#wY').html('Y: '+data.wpos[1]);
-		$('#wZ').html('Z: '+data.wpos[2]);
-	});
-
-	$('#sendGrblHelp').on('click', function() {
-		socket.emit('gcodeLine', { line: '$' });
-	});
-
-	$('#sendGrblSettings').on('click', function() {
-		socket.emit('gcodeLine', { line: '$$' });
-	});
-
-	$('#pause').on('click', function() {
-		if ($('#pause').html() == 'Pause') {
-			// pause queue on server
-			socket.emit('pause', 1);
-			$('#pause').html('Unpause');
-			$('#clearQ').removeClass('disabled');
-		} else {
-			socket.emit('pause', 0);
-			$('#pause').html('Pause');
-			$('#clearQ').addClass('disabled');
-		}
-	});
-
-	$('#clearQ').on('click', function() {
-		// if paused let user clear the command queue
-		socket.emit('clearQ', 1);
-		// must clear queue first, then unpause (click) because unpause does a sendFirstQ on server
-		$('#pause').click();
-	});
-
-	$('#settings_btn').on('click', function() {
-		$('#settings').modal(show=true)
-	});
-
-	socket.on('serialRead', function (data) {
-		$('#console').append(data.line);
-		$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
-	});
-
-	socket.on('qStatus', function (data) {
-		$('#qStatus').html(data.currentLength+'/'+data.currentMax);
-	});
-
-	$('#sendCommand').on('click', function() {
-
-		socket.emit('gcodeLine', { line: $('#command').val() });
-		$('#command').val('');
 
 	});
 
-	$('#sendReset').on('click', function() {
-		socket.emit('doReset', 1);
+	// All button clicks
+	$(document).click(function(item) {
+		var itemClicked = item.target.id;
+		switch(itemClicked){
+			case "chk_singleCommandMode":
+				if ($('#chk_singleCommandMode').is(":checked")){
+					socket.emit('command',{"cmd":"singleCommandMode","value":true});
+				} else {
+					socket.emit('command',{"cmd":"singleCommandMode","value":false});
+				}
+				break;
+			case "abort":
+			case "sendReset":
+				socket.emit('command',{"cmd":"doReset"});
+				break;
+			case "sendUnlock":
+				socket.emit('command',{"cmd":"gcodeLine","line":"$X"});
+				break;
+			case "sendHome":
+				socket.emit('command',{"cmd":"gcodeLine","line":"$H"});
+				break;
+			case "xM":
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' X-'+$('#jogSize').val()+'\nG90'});
+				break;
+			case "xP":
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' X'+$('#jogSize').val()+'\nG90'});
+				break;
+			case "yP":
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' Y'+$('#jogSize').val()+'\nG90'});
+				break;
+			case "yM":
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' Y-'+$('#jogSize').val()+'\nG90'});
+				break;
+			case "zP":
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' Z'+$('#jogSize').val()+'\nG90'});
+				break;
+			case "zM":
+				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+$('#jogSize').val()+'\nG90'});
+				break;
+			case "sendGrblHelp":
+				socket.emit('command',{"cmd":"gcodeLine","line":"$"});
+				break;
+			case "sendGrblSettings":
+				socket.emit('command',{"cmd":"gcodeLine","line":"$$"});
+				break;
+			case "sendCommand":
+				socket.emit('command',{"cmd":"gcodeLine","line":$('#command').val()});
+				$('#command').val('');
+				break;
+			case "sendZero":
+				socket.emit('command',{"cmd":"gcodeLine","line":'G92 X0 Y0 Z0'});
+				break;
+			case "stopStart":
+				paused = !paused;
+				socket.emit('command',{"cmd":"paused","value":paused});
+				break;
+			case "pause":
+				if ($('#pause').html() == 'Pause') {
+					// pause queue on server
+					socket.emit('command',{"cmd":"pause","value":true});
+					$('#pause').html('Unpause');
+					$('#clearQ').removeClass('disabled');
+				} else {
+					socket.emit('command',{"cmd":"pause","value":false});
+					$('#pause').html('Pause');
+					$('#clearQ').addClass('disabled');
+				}
+				break;
+			case "clearQ":
+				// if paused let user clear the command queue
+				socket.emit('command',{"cmd":"clearQ"});
+				// must clear queue first, then unpause (click) because unpause does a sendFirstQ on server
+				$('#pause').click();
+				break;
+			case "settings_btn":
+				socket.emit('command',{"cmd":"refreshSettings"});
+				$('#settings').find('.modal-body').html('Loading...');
+				$('#settings').modal('show');
+				setTimeout(function (){
+					socket.emit('command',{"cmd":"machineSettings"});
+				},2000);
+				break;
+			case "mpC":
+				$('#mpA').addClass('active');
+				$('#wpA').removeClass('active');
+				$('#mPosition').show();
+				$('#wPosition').hide();
+				break;
+			case "wpC":
+				$('#wpA').addClass('active');
+				$('#mpA').removeClass('active');
+				$('#wPosition').show();
+				$('#mPosition').hide();
+				break;
+		};
 	});
 
-	$('#sendZero').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G92 X0 Y0 Z0' });
-	});
 
-	$('#sendUnlock').on('click', function() {
-		socket.emit('gcodeLine', { line: '$X' });
-	});
-
-	$('#sendHome').on('click', function() {
-		socket.emit('gcodeLine', { line: '$H' });
-	});
 
 	// shift enter for send command
 	$('#command').keydown(function (e) {
@@ -106,39 +168,6 @@ $(document).ready(function() {
 				// stop enter from creating a new line
 				e.preventDefault();
 			}
-		}
-	});
-
-	$('#xM').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' X-'+$('#jogSize').val()+'\nG90'});
-	});
-	$('#xP').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' X'+$('#jogSize').val()+'\nG90'});
-	});
-	$('#yP').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Y'+$('#jogSize').val()+'\nG90'});
-	});
-	$('#yM').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Y-'+$('#jogSize').val()+'\nG90'});
-	});
-	$('#zP').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z'+$('#jogSize').val()+'\nG90'});
-	});
-	$('#zM').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+$('#jogSize').val()+'\nG90'});
-	});
-	$('#hm').on('click', function() {
-		socket.emit('gcodeLine', { line: '$H'});
-	});
-	$('#abort').on('click', function() {
-		socket.emit('doReset', 1);
-	});
-	$('#stopStart').on('click', function() {
-		paused = !paused;
-		if(paused){
-			socket.emit('paused', 1);
-		} else {
-			socket.emit('paused', 0);
 		}
 	});
 
@@ -198,7 +227,7 @@ $(document).ready(function() {
 			if (ev.type == 'drop') {
 				reader.onloadend = function (ev) {
 					document.getElementById('command').value = this.result;
-					openGCodeFromText();
+					//openGCodeFromText();
 				};
 				reader.readAsText (ev.dataTransfer.files[0]);
 			}
@@ -213,7 +242,7 @@ $(document).ready(function() {
 		fileInput.addEventListener('change', function(e) {
 			reader.onloadend = function (ev) {
 				document.getElementById('command').value = this.result;
-				openGCodeFromText();
+				//openGCodeFromText();
 			};
 			reader.readAsText (fileInput.files[0]);
 		});
@@ -221,27 +250,5 @@ $(document).ready(function() {
 	} else {
 		alert('your browser is too old to upload files, get the latest Chromium or Firefox');
 	}
-
-	$('#mpC').on('click', function() {
-		$('#mpA').addClass('active');
-		$('#wpA').removeClass('active');
-		$('#mPosition').show();
-		$('#wPosition').hide();
-	});
-
-	$('#wpC').on('click', function() {
-		$('#wpA').addClass('active');
-		$('#mpA').removeClass('active');
-		$('#wPosition').show();
-		$('#mPosition').hide();
-	});
-
-/*
-	socket.on('gcodeFromJscut', function (data) {
-		$('#command').val(data.val);
-		openGCodeFromText();
-		alert('new data from jscut');
-	});
-*/
 
 });

@@ -1,2 +1,6 @@
 .idea/
 *.pyc
+config.py
+unittests/node_modules
+*.*~
+*.desktop

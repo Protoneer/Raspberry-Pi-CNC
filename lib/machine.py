@@ -12,6 +12,9 @@ class Machine:
     QueueCurrentMax = 0
     LastSerialReadData = ''
     LastSerialSendData = []
+    SingleCommandMode = False
+
+    Settings = []
 
 
     def parseData(self, data):
