@@ -3,7 +3,7 @@ from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask
-from flask.ext.socketio import SocketIO, emit, disconnect
+from flask.ext.socketio import SocketIO, emit #, disconnect
 
 import lib.machine as machine
 import config

@@ -69,13 +69,13 @@ def IsStatusMessage(data):
 def UpdateMachineSettings(data):
     machineObj.Settings.append(data)
 
-
+'''
 def SendMachineSettings():
     webSocketEmit('machineSettings',
                   {'status': machineObj.status,
                    'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
                    'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]})
-
+'''
 
 def SetUP(data):
     # Handle status("?") results
