@@ -33,21 +33,54 @@ def init(mac, wsEmit, serialConnection):
 # Processes Commands one line at a time
 def processData(data):
     if data != "":
-        if not SetUP(data):
+        global lastPoleTime
+
+        # Check for Machine Status message
+        if IsStatusMessage(data):
+            machineObj.parseData(data)
+            webSocketEmit('machineStatus',
+                          {'status': machineObj.status,
+                           'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
+                           'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]})
+
+            if machineObj.SingleCommandMode and machineObj.status == 'Idle' and int(round(time.time() * 1000)) > lastPoleTime:
+                ProcessNextLineInQueue()
+                resetPollingTime()
             return
 
+
+        # If queue is passed return
+        if machineObj.QueuePaused:
+            return
+
+        # Process data
         if IsOK(data):
             ForwardSerialDataToSubscribers('green', 'RESP', convertChars(data))
-            SendNextInQueueIfNeeded()
+            if len(machineObj.Queue) > 0:
+                ProcessNextLineInQueue()
+                machineObj.LastSerialSendData.pop()
+
         elif IsError(data):
             ForwardSerialDataToSubscribers('red', 'RESP', convertChars(data))
-            SendNextInQueueIfNeeded()
+            if len(machineObj.Queue) > 0:
+                ProcessNextLineInQueue()
+                machineObj.LastSerialSendData.pop()
+
         elif IsMachineSetting(data):
             UpdateMachineSettings(data)
+
         else:
             ForwardSerialDataToSubscribers('grey', 'RESP', convertChars(data))
 
-        TearDown(data)
+        # Clean up
+        if len(machineObj.Queue) == 0:
+            machineObj.QueueCurrentMax = 0
+
+        webSocketEmit('qStatus',
+                      {'currentLength': len(machineObj.Queue), 'currentMax': machineObj.QueueCurrentMax})
+
+        machineObj.LastSerialReadData = data
+
 
 
 def IsMachineSetting(data):
@@ -69,58 +102,11 @@ def IsStatusMessage(data):
 def UpdateMachineSettings(data):
     machineObj.Settings.append(data)
 
-'''
-def SendMachineSettings():
-    webSocketEmit('machineSettings',
-                  {'status': machineObj.status,
-                   'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
-                   'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]})
-'''
-
-def SetUP(data):
-    # Handle status("?") results
-    if IsStatusMessage(data):
-        machineObj.parseData(data)
-        webSocketEmit('machineStatus',
-                      {'status': machineObj.status,
-                       'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
-                       'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]})
-
-        SendNextInQueueIfNeeded()
-
-        return False
-    if machineObj.QueuePaused:
-        return False
-    return True
-
-
-# Based on the SingleCommand Setting it will wait for the machine to go to idle before sending or full GRBL's command buffer
-def SendNextInQueueIfNeeded():
-    global lastPoleTime
-    if machineObj.SingleCommandMode:
-        if len(machineObj.Queue) > 0 and machineObj.status == 'Idle' and int(round(time.time() * 1000)) > lastPoleTime:
-            ProcessNextLineInQueue()
-            if len(machineObj.LastSerialSendData) > 0:
-                machineObj.LastSerialSendData.pop()
-            resetPollingTime()
-    else:
-        if len(machineObj.Queue) > 0:
-            ProcessNextLineInQueue()
-            if len(machineObj.LastSerialSendData) > 0:
-                machineObj.LastSerialSendData.pop()
-
-
 def resetPollingTime():
     global lastPoleTime
-    lastPoleTime = int(round(time.time() * 1000)) + serialConn.polling_interval + 500
+    lastPoleTime = int(round(time.time() * 1000)) + 250 + 500 # 250 is the polling time
 
 
-def TearDown(data):
-    if len(machineObj.Queue) == 0:
-        machineObj.QueueCurrentMax = 0
-    webSocketEmit('qStatus',
-                  {'currentLength': len(machineObj.Queue), 'currentMax': machineObj.QueueCurrentMax})
-    machineObj.LastSerialReadData = data
 
 
 def ProcessNextLineInQueue():

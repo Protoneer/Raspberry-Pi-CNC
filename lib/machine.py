@@ -1,3 +1,7 @@
+import time
+import threading
+
+
 class Machine:
     status = ''
     mpos_x = 0
@@ -29,6 +33,13 @@ class Machine:
         self.wpos_y = fields[5]
         self.wpos_z = fields[6]
 
+
+    polling_interval = 250
+    next_call = time.time()
+
     def pollingFunction(self, ser):
         print "Sending: ?"
         ser.write('?')
+        self.next_call = self.next_call+0.250
+        threading.Timer(self.next_call - time.time(), self.pollingFunction, args=[ser] ).start()
+

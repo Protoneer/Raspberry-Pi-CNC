@@ -3,12 +3,13 @@ from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask
-from flask.ext.socketio import SocketIO, emit #, disconnect
-
+from flask.ext.socketio import SocketIO, emit
 import lib.machine as machine
 import config
 import lib.serialConnection as sc
 import lib.commandProcessor as cp
+import threading
+import sys
 
 
 app = Flask(__name__, static_url_path='')
@@ -27,12 +28,6 @@ def webSocketEmit(MessageType,data):
 def index():
     return app.send_static_file('index.html')
 
-
-@socketio.on('connect', namespace='/test')
-def test_connect():
-    print "WS:Connect"
-    emit('ports', [{'comName': '/dev/ttyUSB0', 'manufacturer': 'undefined', 'pnpId': 'USB0'}])
-
 @socketio.on('command', namespace='/test')
 def command(data):
     if data['cmd'] == 'singleCommandMode':
@@ -50,7 +45,7 @@ def command(data):
         # Add lines to the serial queue
         for line in lines:
             machineObj.Queue.append(line)
-        cp.SendNextInQueueIfNeeded()
+        cp.ProcessNextLineInQueue()
     elif data['cmd'] == 'paused':
         print data['value']
         if data['value']:
@@ -63,30 +58,30 @@ def command(data):
             machineObj.QueuePaused = True
         else:
             machineObj.QueuePaused = False
-            cp.SendNextInQueueIfNeeded()
+            cp.ProcessNextLineInQueue()
     elif data['cmd'] == 'clearQ':
         machineObj.Queue = []
         emit('qStatus', {'currentLength': 0, 'currentMax': 0})
     elif data['cmd'] == 'refreshSettings':
         machineObj.Settings = []
         machineObj.Queue.append("$$")
-        cp.SendNextInQueueIfNeeded()
+        cp.ProcessNextLineInQueue()
     elif data['cmd'] == 'machineSettings':
         emit('machineSettings', machineObj.Settings)
 
-
 if __name__ == '__main__':
     serialConn = None
-    try:
-        machineObj = machine.Machine()
 
-        serialConn = sc.SerialConnection(config.serial_port, config.serial_baud, config.serial_timeout, cp.processData,
-                                         machineObj.pollingFunction, config.position_poll_interval)
+    machineObj = machine.Machine()
 
-        cp.init(machineObj, webSocketEmit, serialConn)
+    serialConn = sc.SerialConnection(config.serial_port, config.serial_baud, config.serial_timeout)
+    cp.init(machineObj, webSocketEmit, serialConn)
+    serialConn.StartSerialListener(cp.processData)
 
-        serialConn.StartSerialListener()
-        socketio.run(app, host='0.0.0.0')
-    except:
-        print "Error"
-        serialConn.StopSerialListener()
+    # Start Polling
+    machineObj.pollingFunction(serialConn.serial_port)
+
+    # Start Socket.IO
+    socketio.run(app, host='0.0.0.0')
+
+
