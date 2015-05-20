@@ -56,13 +56,13 @@ def processData(data):
         # Process data
         if IsOK(data):
             ForwardSerialDataToSubscribers('green', 'RESP', convertChars(data))
-            if len(machineObj.Queue) > 0:
+            if len(machineObj.Queue) > 0 and not machineObj.SingleCommandMode:
                 ProcessNextLineInQueue()
                 machineObj.LastSerialSendData.pop()
 
         elif IsError(data):
             ForwardSerialDataToSubscribers('red', 'RESP', convertChars(data))
-            if len(machineObj.Queue) > 0:
+            if len(machineObj.Queue) > 0 and not machineObj.SingleCommandMode:
                 ProcessNextLineInQueue()
                 machineObj.LastSerialSendData.pop()
 
