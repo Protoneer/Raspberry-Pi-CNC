@@ -1,7 +1,3 @@
-import time
-import threading
-
-
 class Machine:
     status = ''
     mpos_x = 0
@@ -15,7 +11,6 @@ class Machine:
     Queue = []
     QueueCurrentMax = 0
     LastSerialReadData = ''
-    LastSerialSendData = []
     SingleCommandMode = False
 
     Settings = []
@@ -34,12 +29,11 @@ class Machine:
         self.wpos_z = fields[6]
 
 
-    polling_interval = 250
-    next_call = time.time()
-
-    def pollingFunction(self, ser):
+    def pollingFunction(self, ser, interval):
+        import threading
         print "Sending: ?"
         ser.write('?')
-        self.next_call = self.next_call+0.250
-        threading.Timer(self.next_call - time.time(), self.pollingFunction, args=[ser] ).start()
+        thread = threading.Timer(interval, self.pollingFunction, args=[ser, interval])
+        thread.daemon = True
+        thread.start()
 

@@ -43,32 +43,15 @@ def processData(data):
                            'mpos': [machineObj.mpos_x, machineObj.mpos_y, machineObj.mpos_z],
                            'wpos': [machineObj.wpos_x, machineObj.wpos_y, machineObj.wpos_z]})
 
-            if machineObj.SingleCommandMode and machineObj.status == 'Idle' and int(round(time.time() * 1000)) > lastPoleTime:
-                ProcessNextLineInQueue()
-                resetPollingTime()
-            return
-
-
-        # If queue is passed return
-        if machineObj.QueuePaused:
             return
 
         # Process data
         if IsOK(data):
             ForwardSerialDataToSubscribers('green', 'RESP', convertChars(data))
-            if len(machineObj.Queue) > 0 and not machineObj.SingleCommandMode:
-                ProcessNextLineInQueue()
-                machineObj.LastSerialSendData.pop()
-
         elif IsError(data):
             ForwardSerialDataToSubscribers('red', 'RESP', convertChars(data))
-            if len(machineObj.Queue) > 0 and not machineObj.SingleCommandMode:
-                ProcessNextLineInQueue()
-                machineObj.LastSerialSendData.pop()
-
         elif IsMachineSetting(data):
             UpdateMachineSettings(data)
-
         else:
             ForwardSerialDataToSubscribers('grey', 'RESP', convertChars(data))
 
@@ -110,26 +93,22 @@ def resetPollingTime():
 
 
 def ProcessNextLineInQueue():
-    line = ""
-    if (len(machineObj.Queue) > 0):
-        lineToProcess = machineObj.Queue.pop(0)
+    line = machineObj.Queue.pop(0).split(";")[0].rstrip().rstrip('\n').rstrip('\r')
 
-        # remove comments and trim
-        line = lineToProcess.split(";")[0].rstrip().rstrip('\n').rstrip('\r')
-        if line == "" or line == ";":
-            ProcessNextLineInQueue()
-            return
+    ForwardSerialDataToSubscribers('black', 'SEND', line)
 
-        ForwardSerialDataToSubscribers('black', 'SEND', line)
+    commandRouting(line)
 
-        commandRouting(line)
-
-        machineObj.LastSerialSendData.append(line)
-
-        print line + "\n"
+    print line + "\n"
 
 
 def commandRouting(line):
+
+    # Skip empty and comment lines
+    if line == "" or line == ";":
+        return
+
+
     if line == "RUNPYTHON":
         SendRunPythonCommand(line)
     else:
@@ -155,3 +134,19 @@ def ForwardSerialDataToSubscribers(color, type, line):
     except:
         print "Error: SendSerialRead: " + color + ' - ' + type + ' - ' + line + ' - '
         print str(sys.exc_info())
+
+
+def queuePollingFunction(interval):
+    import threading
+    print "CheckingQueue"
+    if (len(machineObj.Queue) > 0) and not machineObj.QueuePaused:
+        if machineObj.SingleCommandMode:
+            if machineObj.status == 'Idle' and int(round(time.time() * 1000)) > lastPoleTime:
+                ProcessNextLineInQueue()
+                resetPollingTime()
+        else:
+            ProcessNextLineInQueue()
+
+    thread = threading.Timer(interval, queuePollingFunction, args=[interval])
+    thread.daemon = True
+    thread.start()

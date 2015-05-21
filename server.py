@@ -37,7 +37,6 @@ def command(data):
         machineObj.Queue = []
         machineObj.QueueCurrentMax = 0
         machineObj.LastSerialReadData = ''
-        machineObj.LastSerialSendData = []
     elif data['cmd'] == 'gcodeLine':
         print "WS:gcodeLine"
         # Split lines
@@ -45,7 +44,6 @@ def command(data):
         # Add lines to the serial queue
         for line in lines:
             machineObj.Queue.append(line)
-        cp.ProcessNextLineInQueue()
     elif data['cmd'] == 'paused':
         print data['value']
         if data['value']:
@@ -58,14 +56,12 @@ def command(data):
             machineObj.QueuePaused = True
         else:
             machineObj.QueuePaused = False
-            cp.ProcessNextLineInQueue()
     elif data['cmd'] == 'clearQ':
         machineObj.Queue = []
         emit('qStatus', {'currentLength': 0, 'currentMax': 0})
     elif data['cmd'] == 'refreshSettings':
         machineObj.Settings = []
         machineObj.Queue.append("$$")
-        cp.ProcessNextLineInQueue()
     elif data['cmd'] == 'machineSettings':
         emit('machineSettings', machineObj.Settings)
 
@@ -78,8 +74,11 @@ if __name__ == '__main__':
     cp.init(machineObj, webSocketEmit, serialConn)
     serialConn.StartSerialListener(cp.processData)
 
-    # Start Polling
-    machineObj.pollingFunction(serialConn.serial_port)
+    # Start Machine Status Polling
+    machineObj.pollingFunction(serialConn.serial_port, 0.25)
+
+    # Start
+    cp.queuePollingFunction(0.25)
 
     # Start Socket.IO
     socketio.run(app, host='0.0.0.0')
