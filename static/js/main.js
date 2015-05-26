@@ -153,6 +153,26 @@ $(document).ready(function() {
 				$('#wPosition').show();
 				$('#mPosition').hide();
 				break;
+			case "btn-save-settings":
+				var settingsArray = new Array();
+
+				$('#settings .modal-body span').each(function(){
+					settingsArray.push($(this).text().substring(0,$(this).text().indexOf(' ')));
+				});
+
+				var settings = '';
+				for (value of settingsArray) {
+					settings += value + '\r\n';
+				}
+
+				var savesettings = document.createElement('a');
+				savesettings.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(settings));
+				savesettings.setAttribute('download', "settings.nc");
+				savesettings.style.display = 'none';
+				document.body.appendChild(savesettings);
+				savesettings.click();
+				document.body.removeChild(savesettings)
+				break
 		};
 	});
 
