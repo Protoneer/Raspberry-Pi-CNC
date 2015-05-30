@@ -41,9 +41,17 @@ def command(data):
         print "WS:gcodeLine"
         # Split lines
         lines = str(data['line']).split('\n')
+
+        # Streaming mode need to be started once the queue is empty.
+        # SingleLineMode polls and does not need this.
+        needToStartStreamingQueue = True if len(machineObj.Queue) == 0 else False
+
         # Add lines to the serial queue
         for line in lines:
             machineObj.Queue.append(line)
+
+        if needToStartStreamingQueue:
+            cp.IfStreamingModeSendNextCommand()
     elif data['cmd'] == 'paused':
         print data['value']
         if data['value']:
@@ -56,6 +64,7 @@ def command(data):
             machineObj.QueuePaused = True
         else:
             machineObj.QueuePaused = False
+            cp.IfStreamingModeSendNextCommand()
     elif data['cmd'] == 'clearQ':
         machineObj.Queue = []
         emit('qStatus', {'currentLength': 0, 'currentMax': 0})

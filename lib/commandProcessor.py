@@ -48,8 +48,10 @@ def processData(data):
         # Process data
         if IsOK(data):
             ForwardSerialDataToSubscribers('green', 'RESP', convertChars(data))
+            IfStreamingModeSendNextCommand()
         elif IsError(data):
             ForwardSerialDataToSubscribers('red', 'RESP', convertChars(data))
+            IfStreamingModeSendNextCommand()
         elif IsMachineSetting(data):
             UpdateMachineSettings(data)
         else:
@@ -64,7 +66,9 @@ def processData(data):
 
         machineObj.LastSerialReadData = data
 
-
+def IfStreamingModeSendNextCommand():
+    if not machineObj.SingleCommandMode:
+        ProcessNextLineInQueue()
 
 def IsMachineSetting(data):
     return re.search("^\$\d+=.*\(.*\).*", data)
@@ -93,14 +97,14 @@ def resetPollingTime():
 
 
 def ProcessNextLineInQueue():
-    line = machineObj.Queue.pop(0).split(";")[0].rstrip().rstrip('\n').rstrip('\r')
+    if len(machineObj.Queue) > 0:
+        line = machineObj.Queue.pop(0).split(";")[0].rstrip().rstrip('\n').rstrip('\r')
 
-    ForwardSerialDataToSubscribers('black', 'SEND', line)
+        ForwardSerialDataToSubscribers('black', 'SEND', line)
 
-    commandRouting(line)
+        commandRouting(line)
 
-    print line + "\n"
-
+        print line + "\n"
 
 def commandRouting(line):
 
@@ -144,8 +148,8 @@ def queuePollingFunction(interval):
             if machineObj.status == 'Idle' and int(round(time.time() * 1000)) > lastPoleTime:
                 ProcessNextLineInQueue()
                 resetPollingTime()
-        else:
-            ProcessNextLineInQueue()
+        #else:
+        #    ProcessNextLineInQueue()
 
     thread = threading.Timer(interval, queuePollingFunction, args=[interval])
     thread.daemon = True
