@@ -128,7 +128,7 @@ def SendRunPythonCommand(line):
 
     subprocess.call(['ping', '-c', '3', '127.0.0.1'])
     print "PYTHON ROCKS!!!"
-
+    ProcessNextLineInQueue()
 
 def ForwardSerialDataToSubscribers(color, type, line):
     try:
