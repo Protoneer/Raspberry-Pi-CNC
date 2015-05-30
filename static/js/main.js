@@ -172,11 +172,13 @@ $(document).ready(function() {
 				document.body.appendChild(savesettings);
 				savesettings.click();
 				document.body.removeChild(savesettings)
-				break
+				break;
+			case "fileInput":
+				// Work around to enable reload the same file
+				document.getElementById('fileInput').value = null;
+				break;
 		};
 	});
-
-
 
 	// shift enter for send command
 	$('#command').keydown(function (e) {
@@ -245,11 +247,7 @@ $(document).ready(function() {
 			ev.stopPropagation ();
 			ev.preventDefault ();
 			if (ev.type == 'drop') {
-				reader.onloadend = function (ev) {
-					document.getElementById('command').value = this.result;
-					//openGCodeFromText();
-				};
-				reader.readAsText (ev.dataTransfer.files[0]);
+				loadFile();
 			}
 		}
 
@@ -257,18 +255,25 @@ $(document).ready(function() {
 		document.getElementById('command').addEventListener ('dragover', dragEvent, false);
 		document.getElementById('command').addEventListener ('drop', dragEvent, false);
 
+
 		// button
 		var fileInput = document.getElementById('fileInput');
+
 		fileInput.addEventListener('change', function(e) {
+			loadFile();
+		});
+
+	} else {
+		alert('your browser is too old to upload files, get the latest Chromium or Firefox');
+	}
+
+	function loadFile(){
+			var fileInput = document.getElementById('fileInput');
 			reader.onloadend = function (ev) {
 				document.getElementById('command').value = this.result;
 				//openGCodeFromText();
 			};
 			reader.readAsText (fileInput.files[0]);
-		});
-
-	} else {
-		alert('your browser is too old to upload files, get the latest Chromium or Firefox');
 	}
 
 });
