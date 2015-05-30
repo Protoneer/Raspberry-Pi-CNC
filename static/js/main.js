@@ -80,6 +80,9 @@ $(document).ready(function() {
 			case "sendHome":
 				socket.emit('command',{"cmd":"gcodeLine","line":"$H"});
 				break;
+			case "zero":
+				socket.emit('command',{"cmd":"gcodeLine","line":"x0\ny0\nz0"});
+				break;
 			case "xM":
 				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' X-'+$('#jogSize').val()+'\nG90'});
 				break;
