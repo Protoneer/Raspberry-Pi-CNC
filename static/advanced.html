@@ -113,11 +113,6 @@
                 <button type="button" class="btn btn-default" style="margin-top: 5px;" id="sendZero">Zero Machine (G92)</button>
             </center>
 
-
-            <center>
-                <label><input type="checkbox" value="" id="chk_singleCommandMode">Single Command Mode Enabled</label>
-            </center>
-
             <hr style="clear: both;" />
 
             <select class="form-control" id="jogSpeed">
@@ -200,8 +195,13 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title" id="myModalLabel">Machine Settings</h4>
       </div>
+      <div id='extraSettings'>
+          <center>
+              <label><input type="checkbox" value="" id="chk_singleCommandMode">Single Command Mode Enabled</label>
+          </center>
+      </div>
       <div class="modal-body">
-        WIP
+        ...
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal" id="btn-save-settings">Export Settings</button>

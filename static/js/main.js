@@ -31,6 +31,7 @@ $(document).ready(function() {
 				settingHtml += '<span>'+setting+'</span>';
 			});
 			$('#settings').find('.modal-body').html(settingHtml+'</pre>');
+			$('#extraSettings').show();
 		});
 
 		socket.on('disconnect',function() {
@@ -45,6 +46,10 @@ $(document).ready(function() {
 
 		socket.on('qStatus', function (data) {
 			$('#qStatus').html(data.currentLength+'/'+data.currentMax);
+		});
+
+		socket.on('singleCommandMode', function (data) {
+			$('#chk_singleCommandMode').prop('checked', data);
 		});
 
 		/*
@@ -137,6 +142,7 @@ $(document).ready(function() {
 				$('#pause').click();
 				break;
 			case "settings_btn":
+				$('#extraSettings').hide();
 				socket.emit('command',{"cmd":"refreshSettings"});
 				$('#settings').find('.modal-body').html('Loading...');
 				$('#settings').modal('show');

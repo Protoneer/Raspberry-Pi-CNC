@@ -31,7 +31,9 @@ def index():
 @socketio.on('command', namespace='/test')
 def command(data):
     if data['cmd'] == 'singleCommandMode':
-        machineObj.SingleCommandMode = data['cmd']
+        machineObj.SingleCommandMode = data['value']
+        emit('singleCommandMode', machineObj.SingleCommandMode)
+        cp.IfStreamingModeSendNextCommand() # Restart Stream mode if needed
     elif data['cmd'] == 'doReset':
         serialConn.serial_send("\030")
         machineObj.Queue = []
@@ -70,9 +72,11 @@ def command(data):
         emit('qStatus', {'currentLength': 0, 'currentMax': 0})
     elif data['cmd'] == 'refreshSettings':
         machineObj.Settings = []
-        machineObj.Queue.append("$$")
+        cp.commandRouting("$$")
     elif data['cmd'] == 'machineSettings':
+        emit('singleCommandMode', machineObj.SingleCommandMode)
         emit('machineSettings', machineObj.Settings)
+
 
 if __name__ == '__main__':
     serialConn = None
