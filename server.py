@@ -57,9 +57,9 @@ def command(data):
     elif data['cmd'] == 'paused':
         print data['value']
         if data['value']:
-            serialConn.serial_send("~")
-        else:
             serialConn.serial_send("!")
+        else:
+            serialConn.serial_send("~")
     elif data['cmd'] == 'pause':
         if data['value']:
             machineObj.QueuePaused = True
