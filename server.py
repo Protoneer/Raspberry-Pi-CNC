@@ -61,11 +61,12 @@ def command(data):
         else:
             serialConn.serial_send("!")
     elif data['cmd'] == 'pause':
-        print data
-        if data:
+        if data['value']:
             machineObj.QueuePaused = True
+            print machineObj.QueuePaused
         else:
             machineObj.QueuePaused = False
+            print machineObj.QueuePaused
             cp.IfStreamingModeSendNextCommand()
     elif data['cmd'] == 'clearQ':
         machineObj.Queue = []

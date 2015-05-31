@@ -97,7 +97,7 @@ def resetPollingTime():
 
 
 def ProcessNextLineInQueue():
-    if len(machineObj.Queue) > 0:
+    if len(machineObj.Queue) > 0 and not machineObj.QueuePaused:
         line = machineObj.Queue.pop(0).split(";")[0].rstrip().rstrip('\n').rstrip('\r')
 
         ForwardSerialDataToSubscribers('black', 'SEND', line)
