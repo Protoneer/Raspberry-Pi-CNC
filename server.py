@@ -19,8 +19,7 @@ socketio = SocketIO(app)
 
 def webSocketEmit(MessageType,data):
     socketio.emit(MessageType,
-              data,
-              namespace='/test')
+              data)
 
 
 
@@ -28,7 +27,7 @@ def webSocketEmit(MessageType,data):
 def index():
     return app.send_static_file('index.html')
 
-@socketio.on('command', namespace='/test')
+@socketio.on('command')
 def command(data):
     if data['cmd'] == 'singleCommandMode':
         machineObj.SingleCommandMode = data['value']
@@ -95,6 +94,6 @@ if __name__ == '__main__':
     cp.queuePollingFunction(0.25)
 
     # Start Socket.IO
-    socketio.run(app, host='0.0.0.0')
+    socketio.run(app, host='0.0.0.0', port=8081)
 
 

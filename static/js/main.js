@@ -7,9 +7,7 @@ $(document).ready(function() {
 		$('.table-layout').css('margin-top',$('.navbar-collapse').height()-34);
 	});
 
-	namespace = '/test'; // change to an empty string to use the global namespace
-	var socket = io.connect('http://' + document.domain + ':' + 5000 + namespace);
-
+	var socket = io.connect('http://' + document.domain + ':' + 8081);
 
 	socket.on('connect',function() {
 		$("#ws-status").toggleClass("led-red led-green");
