@@ -1,6 +1,6 @@
 $(document).ready(function() {
 	var paused = false;
-
+	var coolant = "M9";
 
 	$( window ).resize(function() {
 		// when header resizes, move ui down
@@ -103,6 +103,27 @@ $(document).ready(function() {
 				break;
 			case "zM":
 				socket.emit('command',{"cmd":"gcodeLine","line":'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+$('#jogSize').val()+'\nG90'});
+				break;
+			case "spnCW":
+				socket.emit('command',{"cmd":"gcodeLine","line":'M3'});
+				//socket.emit('command',{"cmd":"spnCW"});
+				break;
+			case "spnCCW":
+				socket.emit('command',{"cmd":"gcodeLine","line":'M4'});
+				//socket.emit('command',{"cmd":"spnCCW"});
+				break;
+			case "spn":
+				socket.emit('command',{"cmd":"gcodeLine","line":'M5'});
+				//socket.emit('command',{"cmd":"spn"});
+				break;
+			case "cool":
+				if(coolant == "M8"){
+					coolant = "M9"
+				} else {
+					coolant = "M8"
+				};
+				socket.emit('command',{"cmd":"gcodeLine","line":coolant});
+				//socket.emit('command',{"cmd":"cool"});
 				break;
 			case "sendGrblHelp":
 				socket.emit('command',{"cmd":"gcodeLine","line":"$"});

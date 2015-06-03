@@ -76,6 +76,12 @@ def command(data):
     elif data['cmd'] == 'machineSettings':
         emit('singleCommandMode', machineObj.SingleCommandMode)
         emit('machineSettings', machineObj.Settings)
+    '''
+    elif data['cmd'] in ['spnCW', 'spnCCW', 'spn']:
+        print "spn"
+    elif data['cmd'] == 'cool':
+        print "cool"
+    '''
 
 
 if __name__ == '__main__':
