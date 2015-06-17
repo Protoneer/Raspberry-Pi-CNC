@@ -7,3 +7,5 @@ serial_baud = 9600
 #serial_baud = 115200
 
 serial_timeout = 0.1
+
+http_port = 8081

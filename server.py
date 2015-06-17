@@ -100,6 +100,6 @@ if __name__ == '__main__':
     cp.queuePollingFunction(0.25)
 
     # Start Socket.IO
-    socketio.run(app, host='0.0.0.0', port=8081)
+    socketio.run(app, host='0.0.0.0', port=config.http_port)
 
 
