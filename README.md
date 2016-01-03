@@ -12,6 +12,6 @@ Features:
   The software is made available "AS IS". It is in an early stage of development.  Hence there should be plenty of bugs not yet spotted. Please use/try it with care, I don't want to be liable if it causes
   any damage :)
   
-# Credits where they are due:
-https://github.com/andrewhodel/grblweb was the insperation for this project.
+# Credits:
+https://github.com/andrewhodel/grblweb was a huge inperation and the look and feel is very simalar. (The backend was ported from NodeJs to Python and uses Flask and Socket.io...)
 
