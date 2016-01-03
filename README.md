@@ -13,5 +13,5 @@ Features:
   any damage :)
   
 # Credits:
-https://github.com/andrewhodel/grblweb was a huge inperation and the look and feel is very simalar. (The backend was ported from NodeJs to Python and uses Flask and Socket.io...)
+https://github.com/andrewhodel/grblweb (Andrew Hodel) was a huge inspiration and the look and feel is very similar. (The backend was ported from NodeJs to Python and uses Flask and Socket.io...)
 
