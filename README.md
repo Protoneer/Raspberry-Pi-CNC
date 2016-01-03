@@ -11,3 +11,7 @@ Features:
 # Disclaimer
   The software is made available "AS IS". It is in an early stage of development.  Hence there should be plenty of bugs not yet spotted. Please use/try it with care, I don't want to be liable if it causes
   any damage :)
+  
+# Credits where they are due:
+https://github.com/andrewhodel/grblweb was the insperation for this project.
+
